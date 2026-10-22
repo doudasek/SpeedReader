@@ -24,7 +24,7 @@ suspend fun <T> safeApiCall(block: suspend () -> T): NetworkOutcome<T> = try {
     Outcome.Failure(e.toNetworkError())
 }
 
-internal fun Throwable.toNetworkError(): NetworkError = when (this) {
+private fun Throwable.toNetworkError(): NetworkError = when (this) {
     is HttpException -> NetworkError.Http(HttpStatusCode(code()))
     is SerializationException -> NetworkError.Malformed(this)
     is SSLException -> NetworkError.Tls(this)

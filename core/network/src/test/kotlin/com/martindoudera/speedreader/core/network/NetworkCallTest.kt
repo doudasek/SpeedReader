@@ -7,88 +7,98 @@ import java.io.EOFException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import javax.net.ssl.SSLHandshakeException
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.SerializationException
 import okhttp3.ResponseBody.Companion.toResponseBody
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import retrofit2.HttpException
 import retrofit2.Response
 
 class NetworkCallTest {
     @Test
-    fun unknownHostBecomesNoConnection() {
-        val error = UnknownHostException("sp-dir.uwn.com").toNetworkError()
-
-        assertTrue(error is NetworkError.NoConnection)
-    }
-
-    @Test
-    fun socketTimeoutBecomesTimeout() {
-        val error = SocketTimeoutException("read timed out").toNetworkError()
-
-        assertTrue(error is NetworkError.Timeout)
-    }
-
-    @Test
-    fun handshakeFailureBecomesTls() {
-        val error = SSLHandshakeException("trust anchor not found").toNetworkError()
-
-        assertTrue(error is NetworkError.Tls)
-    }
-
-    @Test
-    fun httpFailureKeepsTheStatusCode() {
-        val unauthorized = HttpException(Response.error<Unit>(401, """{"message":"No token"}""".toResponseBody()))
-
-        val error = unauthorized.toNetworkError()
-
-        assertEquals(NetworkError.Http(HttpStatusCode(401)), error)
-    }
-
-    @Test
-    fun serializationFailureBecomesMalformed() {
-        val error = SerializationException("unexpected token").toNetworkError()
-
-        assertTrue(error is NetworkError.Malformed)
-    }
-
-    @Test
-    fun truncatedResponseIsTreatedAsConnectionLoss() {
-        val error = EOFException("unexpected end of stream").toNetworkError()
-
-        assertTrue(error is NetworkError.NoConnection)
-    }
-
-    @Test
-    fun anythingElseBecomesUnknown() {
-        val error = IllegalStateException("bug").toNetworkError()
-
-        assertTrue(error is NetworkError.Unknown)
-    }
-
-    @Test
-    fun successfulCallIsWrapped() {
-        val outcome = runBlocking { safeApiCall { "payload" } }
+    fun successfulCallIsWrapped() = runTest {
+        val outcome = safeApiCall { "payload" }
 
         assertEquals(Outcome.Success("payload"), outcome)
     }
 
     @Test
-    fun failingCallIsMappedToFailure() {
-        val outcome = runBlocking { safeApiCall { throw UnknownHostException("nope") } }
+    fun unknownHostBecomesNoConnection() = runTest {
+        val failure = UnknownHostException("sp-dir.uwn.com")
 
-        assertTrue(outcome is Outcome.Failure && outcome.error is NetworkError.NoConnection)
+        val error = errorOf(failure)
+
+        assertIs<NetworkError.NoConnection>(error)
     }
 
     @Test
-    fun cancellationIsRethrownRatherThanReportedAsFailure() {
-        val thrown = runCatching {
-            runBlocking { safeApiCall { throw CancellationException("stopped by the user") } }
-        }.exceptionOrNull()
+    fun socketTimeoutBecomesTimeout() = runTest {
+        val failure = SocketTimeoutException("read timed out")
 
-        assertTrue(thrown is CancellationException)
+        val error = errorOf(failure)
+
+        assertIs<NetworkError.Timeout>(error)
+    }
+
+    @Test
+    fun handshakeFailureBecomesTls() = runTest {
+        val failure = SSLHandshakeException("trust anchor not found")
+
+        val error = errorOf(failure)
+
+        assertIs<NetworkError.Tls>(error)
+    }
+
+    @Test
+    fun httpFailureKeepsTheStatusCode() = runTest {
+        val failure = HttpException(Response.error<Unit>(401, """{"message":"No token"}""".toResponseBody()))
+
+        val error = errorOf(failure)
+
+        assertEquals(NetworkError.Http(HttpStatusCode(401)), error)
+    }
+
+    @Test
+    fun serializationFailureBecomesMalformed() = runTest {
+        val failure = SerializationException("unexpected token")
+
+        val error = errorOf(failure)
+
+        assertIs<NetworkError.Malformed>(error)
+    }
+
+    @Test
+    fun truncatedResponseIsTreatedAsConnectionLoss() = runTest {
+        val failure = EOFException("unexpected end of stream")
+
+        val error = errorOf(failure)
+
+        assertIs<NetworkError.NoConnection>(error)
+    }
+
+    @Test
+    fun anythingElseBecomesUnknown() = runTest {
+        val failure = IllegalStateException("bug")
+
+        val error = errorOf(failure)
+
+        assertIs<NetworkError.Unknown>(error)
+    }
+
+    @Test
+    fun cancellationIsRethrownRatherThanReportedAsFailure() = runTest {
+        val cancellation = CancellationException("stopped by the user")
+
+        val result = runCatching { safeApiCall { throw cancellation } }
+
+        assertEquals(cancellation, result.exceptionOrNull())
+    }
+
+    private suspend fun errorOf(failure: Exception): NetworkError {
+        val outcome = safeApiCall { throw failure }
+        return assertIs<Outcome.Failure<NetworkError>>(outcome).error
     }
 }

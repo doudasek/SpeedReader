@@ -1,45 +1,39 @@
 package com.martindoudera.speedreader.feature.speedtest.domain.usecase
 
-import com.martindoudera.speedreader.core.common.error.NetworkError
-import com.martindoudera.speedreader.core.common.error.NetworkOutcome
-import com.martindoudera.speedreader.core.common.error.Outcome
-import com.martindoudera.speedreader.feature.speedtest.domain.model.Distance
-import com.martindoudera.speedreader.feature.speedtest.domain.model.GeoPoint
-import com.martindoudera.speedreader.feature.speedtest.domain.model.Latitude
-import com.martindoudera.speedreader.feature.speedtest.domain.model.Longitude
-import com.martindoudera.speedreader.feature.speedtest.domain.model.ServerUrl
 import com.martindoudera.speedreader.feature.speedtest.domain.model.SpeedTestServer
-import com.martindoudera.speedreader.feature.speedtest.domain.repository.LocationRepository
+import com.martindoudera.speedreader.feature.speedtest.testing.data.geoPoint
+import com.martindoudera.speedreader.feature.speedtest.testing.data.testServer
+import com.martindoudera.speedreader.feature.speedtest.testing.repository.FakeLocationRepository
 import kotlin.random.Random
-import org.junit.Assert.assertEquals
+import kotlin.test.assertEquals
 import org.junit.Test
 
 class SelectClosestServersUseCaseTest {
-    private val selectClosestServers = SelectClosestServersUseCase(FixedDistanceLocationRepository)
+    private val selectClosestServers = SelectClosestServersUseCase(FakeLocationRepository())
 
     @Test
     fun picksTheClosestServersInOrderOfDistance() {
         val closest = selectClosestServers(directory, ORIGIN)
 
-        assertEquals(listOf(NEAREST, SECOND, CO_LOCATED_A, CO_LOCATED_B, FIFTH), closest.map { it.url })
+        assertEquals(listOf(NEAREST, SECOND, CO_LOCATED_A, CO_LOCATED_B, FIFTH), closest)
     }
 
     @Test
     fun coLocatedServersAreOrderedByUrl() {
-        val coLocated = directory.filter { it.url == CO_LOCATED_A || it.url == CO_LOCATED_B }
+        val coLocated = listOf(CO_LOCATED_B, CO_LOCATED_A)
 
-        val ordered = selectClosestServers(coLocated.reversed(), ORIGIN)
+        val ordered = selectClosestServers(coLocated, ORIGIN)
 
-        assertEquals(listOf(CO_LOCATED_A, CO_LOCATED_B), ordered.map { it.url })
+        assertEquals(listOf(CO_LOCATED_A, CO_LOCATED_B), ordered)
     }
 
     @Test
     fun inputOrderDoesNotChangeTheSelection() {
-        val expected = selectClosestServers(directory, ORIGIN)
+        val shuffledDirectories = List(20) { seed -> directory.shuffled(Random(seed)) }
 
-        repeat(20) { seed ->
-            assertEquals(expected, selectClosestServers(directory.shuffled(Random(seed)), ORIGIN))
-        }
+        val selections = shuffledDirectories.map { selectClosestServers(it, ORIGIN) }
+
+        assertEquals(setOf(selectClosestServers(directory, ORIGIN)), selections.toSet())
     }
 
     @Test
@@ -51,54 +45,31 @@ class SelectClosestServersUseCaseTest {
 
     @Test
     fun returnsEveryServerWhenThereAreFewerThanRequested() {
-        val closest = selectClosestServers(directory.take(3), ORIGIN)
+        val smallDirectory = directory.take(3)
+
+        val closest = selectClosestServers(smallDirectory, ORIGIN)
 
         assertEquals(3, closest.size)
     }
 
     @Test
     fun emptyDirectoryGivesNoServers() {
-        assertEquals(emptyList<SpeedTestServer>(), selectClosestServers(emptyList(), ORIGIN))
-    }
+        val closest = selectClosestServers(emptyList(), ORIGIN)
 
-    private object FixedDistanceLocationRepository : LocationRepository {
-        override suspend fun currentLocation(): NetworkOutcome<GeoPoint> = Outcome.Failure(NetworkError.Unknown(null))
-
-        override fun distance(from: GeoPoint, to: GeoPoint): Distance = distances.getValue(to)
+        assertEquals(emptyList<SpeedTestServer>(), closest)
     }
 
     private companion object {
-        fun point(latitude: Double, longitude: Double) = GeoPoint(Latitude(latitude), Longitude(longitude))
+        val ORIGIN = geoPoint(49.0, 16.0)
 
-        val ORIGIN = point(49.0, 16.0)
+        val NEAREST = testServer("https://nearest.example", 49.1, 16.0)
+        val SECOND = testServer("https://second.example", 49.3, 16.0)
+        val CO_LOCATED_A = testServer("https://co-located-a.example", 49.5, 16.0)
+        val CO_LOCATED_B = testServer("https://co-located-b.example", 49.5, 16.0)
+        val FIFTH = testServer("https://fifth.example", 49.7, 16.0)
+        val SIXTH = testServer("https://sixth.example", 49.9, 16.0)
+        val FARTHEST = testServer("https://farthest.example", 50.5, 16.0)
 
-        val NEAREST = ServerUrl("https://nearest.example")
-        val SECOND = ServerUrl("https://second.example")
-        val CO_LOCATED_A = ServerUrl("https://co-located-a.example")
-        val CO_LOCATED_B = ServerUrl("https://co-located-b.example")
-        val FIFTH = ServerUrl("https://fifth.example")
-        val SIXTH = ServerUrl("https://sixth.example")
-        val FARTHEST = ServerUrl("https://farthest.example")
-
-        val shared = point(48.2, 16.4)
-
-        val distances = mapOf(
-            point(48.8, 16.9) to Distance(53_000.0),
-            point(49.2, 17.7) to Distance(77_000.0),
-            shared to Distance(111_000.0),
-            point(48.2, 16.3) to Distance(112_000.0),
-            point(49.5, 18.1) to Distance(115_000.0),
-            point(50.0, 16.6) to Distance(160_000.0),
-        )
-
-        val directory = listOf(
-            SpeedTestServer(FARTHEST, point(50.0, 16.6), null, null, null),
-            SpeedTestServer(CO_LOCATED_B, shared, null, null, null),
-            SpeedTestServer(SECOND, point(49.2, 17.7), null, null, null),
-            SpeedTestServer(SIXTH, point(49.5, 18.1), null, null, null),
-            SpeedTestServer(NEAREST, point(48.8, 16.9), null, null, null),
-            SpeedTestServer(CO_LOCATED_A, shared, null, null, null),
-            SpeedTestServer(FIFTH, point(48.2, 16.3), null, null, null),
-        )
+        val directory = listOf(FARTHEST, CO_LOCATED_B, SECOND, SIXTH, NEAREST, CO_LOCATED_A, FIFTH)
     }
 }

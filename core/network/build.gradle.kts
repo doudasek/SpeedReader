@@ -14,5 +14,5 @@ dependencies {
     api(libs.retrofit)
     api(libs.retrofit.converter.kotlinx.serialization)
     implementation(project(":core:common"))
-    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

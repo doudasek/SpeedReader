@@ -14,11 +14,8 @@ import kotlin.time.Duration
 sealed interface SpeedTestProgress {
     data object FindingServer : SpeedTestProgress
 
-    data class Downloading(
-        val server: SelectedServer,
-        val progress: Progress,
-        val remaining: Duration,
-        val currentSpeed: Throughput) : SpeedTestProgress
+    data class Downloading(val server: SelectedServer, val progress: Progress, val remaining: Duration, val currentSpeed: Throughput) :
+        SpeedTestProgress
 
     data class Uploading(
         val server: SelectedServer,
