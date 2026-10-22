@@ -1,6 +1,7 @@
 plugins {
     id("speedreader.android.library")
     id("speedreader.android.compose")
+    id("speedreader.android.screenshot")
     id("speedreader.hilt")
     alias(libs.plugins.kotlin.serialization)
 }
@@ -14,6 +15,7 @@ dependencies {
     implementation(project(":core:common"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:network"))
+    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)

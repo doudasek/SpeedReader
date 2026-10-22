@@ -26,5 +26,9 @@ gradlePlugin {
             id = "speedreader.hilt"
             implementationClass = "HiltConventionPlugin"
         }
+        register("androidScreenshot") {
+            id = "speedreader.android.screenshot"
+            implementationClass = "AndroidScreenshotConventionPlugin"
+        }
     }
 }
