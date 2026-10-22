@@ -3,84 +3,86 @@ package com.martindoudera.speedreader.feature.speedtest.domain
 import com.martindoudera.speedreader.feature.speedtest.domain.model.ByteCount
 import com.martindoudera.speedreader.feature.speedtest.domain.model.Throughput
 import com.martindoudera.speedreader.feature.speedtest.domain.model.TransferSample
+import com.martindoudera.speedreader.feature.speedtest.testing.data.SAMPLE_INTERVAL
+import kotlin.test.assertEquals
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ThroughputMeterTest {
+    private val meter = ThroughputMeter()
+
     @Test
     fun firstSampleIsMeasuredFromTheStart() {
-        val meter = ThroughputMeter()
+        val sample = TransferSample(200.milliseconds, ByteCount(2_500_000))
 
-        val speed = meter.record(TransferSample(200.milliseconds, ByteCount(2_500_000)))
+        val speed = meter.record(sample)
 
         assertEquals(100_000_000.0, speed.bitsPerSecond, 1e-6)
     }
 
     @Test
     fun currentSpeedFollowsTheLastSecondOnly() {
-        val meter = ThroughputMeter()
-        steadyRate(meter, bytesPerTick = 2_500_000, ticks = 10)
+        recordSteadyRate(bytesPerTick = 2_500_000, ticks = 10)
 
-        val speed = steadyRate(meter, bytesPerTick = 250_000, ticks = 5, startTick = 10)
+        val speed = recordSteadyRate(bytesPerTick = 250_000, ticks = 5)
 
-        assertEquals(10_000_000.0, speed.bitsPerSecond, 1e-6)
+        assertEquals(8_000_000.0, speed.bitsPerSecond, 1e-6)
     }
 
     @Test
-    fun averageIsTotalBytesOverTotalTimeIncludingTheSlowPart() {
-        val meter = ThroughputMeter()
-        steadyRate(meter, bytesPerTick = 2_500_000, ticks = 10)
-        steadyRate(meter, bytesPerTick = 250_000, ticks = 10, startTick = 10)
+    fun averageIsTotalDataOverTotalTimeIncludingTheSlowPart() {
+        recordSteadyRate(bytesPerTick = 2_500_000, ticks = 10)
+        recordSteadyRate(bytesPerTick = 250_000, ticks = 10)
 
-        assertEquals(55_000_000.0, meter.average().bitsPerSecond, 1e-6)
+        val average = meter.average()
+
+        assertEquals(44_000_000.0, average.bitsPerSecond, 1e-6)
     }
 
     @Test
     fun stalledTransferReadsZero() {
-        val meter = ThroughputMeter()
-        steadyRate(meter, bytesPerTick = 2_500_000, ticks = 5)
+        recordSteadyRate(bytesPerTick = 2_500_000, ticks = 5)
 
-        val speed = steadyRate(meter, bytesPerTick = 0, ticks = 5, startTick = 5)
+        val speed = recordSteadyRate(bytesPerTick = 0, ticks = 5)
 
         assertEquals(Throughput.Zero, speed)
     }
 
     @Test
     fun sampleWithoutElapsedTimeDoesNotDivideByZero() {
-        val meter = ThroughputMeter()
+        val sample = TransferSample(Duration.ZERO, ByteCount(1_000))
 
-        val speed = meter.record(TransferSample(Duration.ZERO, ByteCount(1_000)))
+        val speed = meter.record(sample)
 
         assertEquals(Throughput.Zero, speed)
     }
 
     @Test
     fun nothingRecordedAveragesToZero() {
-        val meter = ThroughputMeter()
+        val average = meter.average()
 
-        assertEquals(Throughput.Zero, meter.average())
+        assertEquals(Throughput.Zero, average)
         assertEquals(ByteCount.Zero, meter.transferred)
     }
 
     @Test
     fun throughputConvertsBytesToBits() {
-        assertEquals(8.0, Throughput.of(ByteCount(1), 1.seconds).bitsPerSecond, 0.0)
+        val throughput = Throughput.of(ByteCount(1), 1.seconds)
+
+        assertEquals(8.0, throughput.bitsPerSecond)
     }
 
-    private fun steadyRate(meter: ThroughputMeter, bytesPerTick: Long, ticks: Int, startTick: Int = 0): Throughput {
+    private var ticksRecorded = 0
+
+    private fun recordSteadyRate(bytesPerTick: Long, ticks: Int): Throughput {
         var speed = Throughput.Zero
-        var total = meter.transferred
-        for (tick in startTick + 1..startTick + ticks) {
-            total += ByteCount(bytesPerTick)
-            speed = meter.record(TransferSample(TICK * tick, total))
+        repeat(ticks) {
+            ticksRecorded++
+            val sample = TransferSample(SAMPLE_INTERVAL * ticksRecorded, meter.transferred + ByteCount(bytesPerTick))
+            speed = meter.record(sample)
         }
         return speed
-    }
-
-    private companion object {
-        val TICK = 200.milliseconds
     }
 }

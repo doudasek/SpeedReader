@@ -1,11 +1,11 @@
 package com.martindoudera.speedreader.core.network.di
 
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlinx.serialization.MissingFieldException
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertThrows
 import org.junit.Test
 
 enum class TestKind { Unknown, Residential, DataCentre }
@@ -26,7 +26,9 @@ class JsonConfigurationTest {
 
     @Test
     fun unknownKeysAreIgnored() {
-        val decoded = json.decodeFromString<ForwardCompatibleDto>("""{"url":"https://a","fieldAddedLater":42}""")
+        val withNewField = """{"url":"https://a","fieldAddedLater":42}"""
+
+        val decoded = json.decodeFromString<ForwardCompatibleDto>(withNewField)
 
         assertEquals("https://a", decoded.url)
     }
@@ -44,43 +46,53 @@ class JsonConfigurationTest {
     fun oneMalformedEntryFailsTheWholeList() {
         val list = """[{"url":"https://a"},{"url":42}]"""
 
-        assertThrows(SerializationException::class.java) {
-            json.decodeFromString<List<ForwardCompatibleDto>>(list)
-        }
+        val result = runCatching { json.decodeFromString<List<ForwardCompatibleDto>>(list) }
+
+        assertIs<SerializationException>(result.exceptionOrNull())
     }
 
     @Test
     fun unknownEnumValueFallsBackToDeclaredDefault() {
-        val decoded = json.decodeFromString<ForwardCompatibleDto>("""{"url":"https://a","kind":"Satellite"}""")
+        val withNewEnumValue = """{"url":"https://a","kind":"Satellite"}"""
+
+        val decoded = json.decodeFromString<ForwardCompatibleDto>(withNewEnumValue)
 
         assertEquals(TestKind.Unknown, decoded.kind)
     }
 
     @Test
     fun unknownEnumValueFailsWhenThePropertyHasNoDefault() {
-        assertThrows(SerializationException::class.java) {
-            json.decodeFromString<StrictDto>("""{"url":"https://a","kind":"Satellite"}""")
-        }
+        val withNewEnumValue = """{"url":"https://a","kind":"Satellite"}"""
+
+        val result = runCatching { json.decodeFromString<StrictDto>(withNewEnumValue) }
+
+        assertIs<SerializationException>(result.exceptionOrNull())
     }
 
     @Test
     fun explicitNullFallsBackToDefaultOnNonNullableProperty() {
-        val decoded = json.decodeFromString<ForwardCompatibleDto>("""{"url":"https://a","label":null}""")
+        val withNullLabel = """{"url":"https://a","label":null}"""
+
+        val decoded = json.decodeFromString<ForwardCompatibleDto>(withNullLabel)
 
         assertEquals("fallback", decoded.label)
     }
 
     @Test
     fun missingNullablePropertyDecodesToNull() {
-        val decoded = json.decodeFromString<ForwardCompatibleDto>("""{"url":"https://a"}""")
+        val withoutNote = """{"url":"https://a"}"""
+
+        val decoded = json.decodeFromString<ForwardCompatibleDto>(withoutNote)
 
         assertNull(decoded.note)
     }
 
     @Test
     fun missingRequiredPropertyFails() {
-        assertThrows(MissingFieldException::class.java) {
-            json.decodeFromString<ForwardCompatibleDto>("""{"kind":"Residential"}""")
-        }
+        val withoutUrl = """{"kind":"Residential"}"""
+
+        val result = runCatching { json.decodeFromString<ForwardCompatibleDto>(withoutUrl) }
+
+        assertIs<MissingFieldException>(result.exceptionOrNull())
     }
 }
