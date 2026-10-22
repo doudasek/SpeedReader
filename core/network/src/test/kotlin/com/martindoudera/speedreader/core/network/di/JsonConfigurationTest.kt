@@ -19,10 +19,7 @@ data class ForwardCompatibleDto(
 )
 
 @Serializable
-data class StrictDto(
-    val url: String,
-    val kind: TestKind,
-)
+data class StrictDto(val url: String, val kind: TestKind)
 
 class JsonConfigurationTest {
     private val json = NetworkModule.providesJson()
@@ -36,8 +33,7 @@ class JsonConfigurationTest {
 
     @Test
     fun unknownNestedObjectsAndArraysAreIgnored() {
-        val withNewBlock =
-            """{"url":"https://a","meta":{"added":1,"nested":[1,2,{"deep":null}]},"tags":["x","y"]}"""
+        val withNewBlock = """{"url":"https://a","meta":{"added":1,"nested":[1,2,{"deep":null}]},"tags":["x","y"]}"""
 
         val decoded = json.decodeFromString<ForwardCompatibleDto>(withNewBlock)
 

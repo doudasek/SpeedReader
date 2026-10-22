@@ -1,7 +1,12 @@
 package com.martindoudera.speedreader.core.network
 
+import com.martindoudera.speedreader.core.common.error.HttpStatusCode
 import com.martindoudera.speedreader.core.common.error.NetworkError
 import com.martindoudera.speedreader.core.common.error.Outcome
+import java.io.EOFException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
+import javax.net.ssl.SSLHandshakeException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerializationException
@@ -11,10 +16,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import retrofit2.HttpException
 import retrofit2.Response
-import java.io.EOFException
-import java.net.SocketTimeoutException
-import java.net.UnknownHostException
-import javax.net.ssl.SSLHandshakeException
 
 class NetworkCallTest {
     @Test
@@ -44,7 +45,7 @@ class NetworkCallTest {
 
         val error = unauthorized.toNetworkError()
 
-        assertEquals(NetworkError.Http(401), error)
+        assertEquals(NetworkError.Http(HttpStatusCode(401)), error)
     }
 
     @Test
@@ -84,10 +85,9 @@ class NetworkCallTest {
 
     @Test
     fun cancellationIsRethrownRatherThanReportedAsFailure() {
-        val thrown =
-            runCatching {
-                runBlocking { safeApiCall { throw CancellationException("stopped by the user") } }
-            }.exceptionOrNull()
+        val thrown = runCatching {
+            runBlocking { safeApiCall { throw CancellationException("stopped by the user") } }
+        }.exceptionOrNull()
 
         assertTrue(thrown is CancellationException)
     }
