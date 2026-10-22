@@ -55,15 +55,15 @@ class RunSpeedTestUseCase @Inject constructor(
         val server = valueOrFail(findServer()) ?: return@flow
 
         val downloadSamples = throughputRepository.download(server.server, mode.connections)
-        val downloadOutcome = measure(downloadSamples, startsAt = Duration.ZERO) { progress, remaining, speed ->
-            SpeedTestProgress.Downloading(server, progress, remaining, speed)
+        val downloadOutcome = measure(downloadSamples, startsAt = Duration.ZERO) { progress, remaining, current, average ->
+            SpeedTestProgress.Downloading(server, progress, remaining, current, average)
         }
         val download = valueOrFail(downloadOutcome) ?: return@flow
         Timber.d("Download average %.1f Mbit/s", download.megabitsPerSecond)
 
         val uploadSamples = throughputRepository.upload(server.server, mode.connections)
-        val uploadOutcome = measure(uploadSamples, startsAt = PHASE_DURATION) { progress, remaining, speed ->
-            SpeedTestProgress.Uploading(server, download, progress, remaining, speed)
+        val uploadOutcome = measure(uploadSamples, startsAt = PHASE_DURATION) { progress, remaining, current, average ->
+            SpeedTestProgress.Uploading(server, download, progress, remaining, current, average)
         }
         val upload = valueOrFail(uploadOutcome) ?: return@flow
 
@@ -100,7 +100,7 @@ class RunSpeedTestUseCase @Inject constructor(
     private suspend fun FlowCollector<SpeedTestProgress>.measure(
         samples: Flow<NetworkOutcome<TransferSample>>,
         startsAt: Duration,
-        progressOf: (progress: Progress, remaining: Duration, currentSpeed: Throughput) -> SpeedTestProgress,
+        progressOf: (progress: Progress, remaining: Duration, currentSpeed: Throughput, averageSpeed: Throughput) -> SpeedTestProgress,
     ): SpeedTestOutcome<Throughput> {
         val meter = ThroughputMeter()
         var failure: SpeedTestError? = null
@@ -120,7 +120,8 @@ class RunSpeedTestUseCase @Inject constructor(
                 val currentSpeed = meter.record(sample)
                 Timber.v("%s: %d B, current %.1f Mbit/s", sample.elapsed, sample.transferred.bytes, currentSpeed.megabitsPerSecond)
                 val testElapsed = startsAt + sample.elapsed.coerceAtMost(PHASE_DURATION)
-                emit(progressOf(Progress((testElapsed / TEST_DURATION).toFloat()), TEST_DURATION - testElapsed, currentSpeed))
+                val progress = Progress((testElapsed / TEST_DURATION).toFloat())
+                emit(progressOf(progress, TEST_DURATION - testElapsed, currentSpeed, meter.average()))
             }
 
         failure?.let { return Outcome.Failure(it) }
