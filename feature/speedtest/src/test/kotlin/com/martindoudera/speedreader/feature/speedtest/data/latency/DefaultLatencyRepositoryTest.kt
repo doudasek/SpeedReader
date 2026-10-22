@@ -30,7 +30,7 @@ class DefaultLatencyRepositoryTest {
 
     @Test
     fun latencyIsTheFastestProbe() = runTest(dispatcher) {
-        pingDataSource.roundTrips = listOf(30, 22, 25, 40, 28).map { it.milliseconds }
+        pingDataSource.roundTrips = listOf(30, 22, 25).map { it.milliseconds }
 
         val outcome = repository.measureLatency(server)
 
@@ -38,12 +38,13 @@ class DefaultLatencyRepositoryTest {
     }
 
     @Test
-    fun lostProbesAreIgnored() = runTest(dispatcher) {
-        pingDataSource.roundTrips = listOf(null, 30.milliseconds, null, 25.milliseconds, null)
+    fun firstLostProbeEndsProbingAndEarlierAnswersCount() = runTest(dispatcher) {
+        pingDataSource.roundTrips = listOf(30.milliseconds, null, 10.milliseconds)
 
         val outcome = repository.measureLatency(server)
 
-        assertEquals(Outcome.Success(25.milliseconds), outcome)
+        assertEquals(Outcome.Success(30.milliseconds), outcome)
+        assertEquals(2, pingDataSource.pinged.size)
     }
 
     @Test
@@ -57,12 +58,13 @@ class DefaultLatencyRepositoryTest {
     }
 
     @Test
-    fun silentServerIsUnreachable() = runTest(dispatcher) {
+    fun silentServerIsUnreachableAfterASingleProbe() = runTest(dispatcher) {
         pingDataSource.roundTrips = emptyList()
 
         val outcome = repository.measureLatency(server)
 
         assertEquals(Outcome.Failure(SpeedTestError.ServerUnreachable), outcome)
+        assertEquals(1, pingDataSource.pinged.size)
     }
 
     @Test
