@@ -85,6 +85,18 @@ class RunSpeedTestUseCaseTest {
     }
 
     @Test
+    fun measuringStatesCarryTheRunningAverageOfTheirPhase() = runTest {
+        throughputRepository.downloadSamples =
+            flowOf(transferSample(tick = 1, totalBytes = 250_000), transferSample(tick = 2, totalBytes = 1_000_000))
+
+        val states = runSpeedTest(ConnectionMode.Parallel).toList()
+
+        val downloading = states.filterIsInstance<Downloading>()
+        assertEquals(8_000_000.0, downloading[0].averageSpeed.bitsPerSecond, 1e-6)
+        assertEquals(16_000_000.0, downloading[1].averageSpeed.bitsPerSecond, 1e-6)
+    }
+
+    @Test
     fun eachPhaseStopsAtHalfTheTestEvenIfTheServerKeepsSending() = runTest {
         throughputRepository.downloadSamples = steadyTransfer(bytesPerTick = 1_000, until = 20.seconds)
 
