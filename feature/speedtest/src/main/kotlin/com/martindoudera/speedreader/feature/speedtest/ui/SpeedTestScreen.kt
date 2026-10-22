@@ -123,9 +123,10 @@ internal fun SpeedTestContent(
                 }
             } else {
                 Column(
-                    modifier = Modifier.fillMaxSize().widthIn(
-                        max = SpeedReaderTheme.dimens.contentMaxWidth,
-                    ).align(Alignment.CenterHorizontally),
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .widthIn(max = SpeedReaderTheme.dimens.contentMaxWidth)
+                        .fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(spacing.sm),
                 ) {
                     chip(Modifier.padding(top = spacing.xs))
@@ -143,7 +144,7 @@ private fun Stage(phase: SpeedTestPhase, onStartClick: () -> Unit, modifier: Mod
     AnimatedContent(
         targetState = phase,
         contentKey = { it.stageKey() },
-        transitionSpec = { (fadeIn(tween(400)) + scaleIn(initialScale = 0.94f)) togetherWith fadeOut(tween(200)) },
+        transitionSpec = { (fadeIn(tween(400)) + scaleIn(initialScale = 0.94f)) togetherWith fadeOut(tween(200)) using null },
         contentAlignment = Alignment.Center,
         modifier = modifier,
         label = "stage",
