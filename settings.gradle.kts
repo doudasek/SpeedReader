@@ -22,5 +22,12 @@ dependencyResolutionManagement {
     }
 }
 
+includeBuild("build-logic")
+
 rootProject.name = "SpeedReader"
+
 include(":app")
+include(":core:common")
+include(":core:designsystem")
+include(":core:network")
+include(":feature:speedtest")
