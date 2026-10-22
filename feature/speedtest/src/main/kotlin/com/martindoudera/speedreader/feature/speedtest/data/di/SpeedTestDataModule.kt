@@ -7,9 +7,15 @@ import com.martindoudera.speedreader.feature.speedtest.data.latency.DefaultPingD
 import com.martindoudera.speedreader.feature.speedtest.data.latency.PingDataSource
 import com.martindoudera.speedreader.feature.speedtest.data.location.DefaultLocationRepository
 import com.martindoudera.speedreader.feature.speedtest.data.server.DefaultServerRepository
+import com.martindoudera.speedreader.feature.speedtest.data.throughput.DefaultDownloadDataSource
+import com.martindoudera.speedreader.feature.speedtest.data.throughput.DefaultThroughputRepository
+import com.martindoudera.speedreader.feature.speedtest.data.throughput.DefaultUploadDataSource
+import com.martindoudera.speedreader.feature.speedtest.data.throughput.DownloadDataSource
+import com.martindoudera.speedreader.feature.speedtest.data.throughput.UploadDataSource
 import com.martindoudera.speedreader.feature.speedtest.domain.repository.LatencyRepository
 import com.martindoudera.speedreader.feature.speedtest.domain.repository.LocationRepository
 import com.martindoudera.speedreader.feature.speedtest.domain.repository.ServerRepository
+import com.martindoudera.speedreader.feature.speedtest.domain.repository.ThroughputRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -30,10 +36,19 @@ internal interface SpeedTestDataModule {
     fun bindsLatencyRepository(repository: DefaultLatencyRepository): LatencyRepository
 
     @Binds
+    fun bindsThroughputRepository(repository: DefaultThroughputRepository): ThroughputRepository
+
+    @Binds
     fun bindsTokenDataSource(dataSource: DefaultTokenDataSource): TokenDataSource
 
     @Binds
     fun bindsPingDataSource(dataSource: DefaultPingDataSource): PingDataSource
+
+    @Binds
+    fun bindsDownloadDataSource(dataSource: DefaultDownloadDataSource): DownloadDataSource
+
+    @Binds
+    fun bindsUploadDataSource(dataSource: DefaultUploadDataSource): UploadDataSource
 
     companion object {
         @Provides
