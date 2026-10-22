@@ -1,55 +1,107 @@
 package com.martindoudera.speedreader.core.designsystem.theme
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80,
-)
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.graphics.Color
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40,
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
+    primary = Indigo50,
     onPrimary = Color.White,
+    secondary = Teal50,
     onSecondary = Color.White,
+    tertiary = Violet60,
     onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-     */
+    error = Red50,
+    onError = Color.White,
+    errorContainer = Red95,
+    onErrorContainer = Red50,
+    background = Slate98,
+    onBackground = Slate10,
+    surface = Color.White,
+    onSurface = Slate10,
+    surfaceVariant = Slate94,
+    onSurfaceVariant = Slate40,
+    surfaceContainer = Slate94,
+    surfaceContainerHigh = Slate90,
+    outline = Slate40,
+    outlineVariant = Slate85,
+    inverseSurface = Slate10,
+    inverseOnSurface = Slate98,
 )
 
-@Composable
-fun SpeedReaderTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
-    content: @Composable () -> Unit,
-) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+private val DarkColorScheme = darkColorScheme(
+    primary = Indigo80,
+    onPrimary = Slate5,
+    secondary = Teal80,
+    onSecondary = Slate5,
+    tertiary = Violet80,
+    onTertiary = Slate5,
+    error = Red70,
+    onError = Slate5,
+    errorContainer = Red20,
+    onErrorContainer = Red70,
+    background = Slate5,
+    onBackground = Slate95,
+    surface = Slate12,
+    onSurface = Slate95,
+    surfaceVariant = Slate15,
+    onSurfaceVariant = Slate70,
+    surfaceContainer = Slate15,
+    surfaceContainerHigh = Slate20,
+    outline = Slate70,
+    outlineVariant = Slate25,
+    inverseSurface = Slate95,
+    inverseOnSurface = Slate5,
+)
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content,
-    )
+private val BrandGradient = listOf(Teal50, Indigo50, Violet60)
+
+private val LightSpeedColors = SpeedColors(download = Teal50, upload = Violet60, highlight = Amber60, brandGradient = BrandGradient)
+
+private val DarkSpeedColors = SpeedColors(download = Teal80, upload = Violet80, highlight = Amber80, brandGradient = BrandGradient)
+
+private val DefaultSpacing = Spacing()
+
+private val DefaultDimens = Dimens()
+
+/**
+ * The app theme: Material 3 with the SpeedReader palette, plus [SpeedColors], [Spacing] and [Dimens].
+ *
+ * Dynamic colour is deliberately not supported, because download and upload are recognised by colour
+ * throughout the UI and a wallpaper-derived palette would erase that.
+ */
+@Composable
+fun SpeedReaderTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
+    CompositionLocalProvider(
+        LocalSpeedColors provides if (darkTheme) DarkSpeedColors else LightSpeedColors,
+        LocalSpacing provides DefaultSpacing,
+        LocalDimens provides DefaultDimens,
+    ) {
+        MaterialTheme(
+            colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
+            typography = SpeedReaderTypography,
+            shapes = SpeedReaderShapes,
+            content = content,
+        )
+    }
+}
+
+/** Access to the theme values Material 3 does not cover, alongside `MaterialTheme`. */
+object SpeedReaderTheme {
+    val speedColors: SpeedColors
+        @Composable @ReadOnlyComposable
+        get() = LocalSpeedColors.current
+
+    val spacing: Spacing
+        @Composable @ReadOnlyComposable
+        get() = LocalSpacing.current
+
+    val dimens: Dimens
+        @Composable @ReadOnlyComposable
+        get() = LocalDimens.current
 }

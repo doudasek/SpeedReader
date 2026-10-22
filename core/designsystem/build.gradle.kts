@@ -11,6 +11,7 @@ android {
 dependencies {
     api(platform(libs.androidx.compose.bom))
     api(libs.androidx.compose.material3)
+    api(libs.androidx.compose.material.iconsExtended)
     api(libs.androidx.compose.material3.adaptive)
     api(libs.androidx.compose.material3.windowSizeClass)
     api(libs.androidx.compose.ui)
