@@ -25,6 +25,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.intl.Locale
+import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.martindoudera.speedreader.core.designsystem.theme.SpeedReaderTheme
@@ -32,7 +34,7 @@ import com.martindoudera.speedreader.core.designsystem.theme.SpeedReaderTheme
 private const val PULSE_DURATION_MILLIS = 2600
 private const val PULSE_GROWTH = 0.45f
 
-/** The large round call-to-action on the brand gradient, with two rings pulsing out of it to invite a tap. */
+/** The large round call-to-action on the brand gradient, with two rings pulsing out of it to invite a tap. Shows `text` in capitals. */
 @Composable
 fun SrPulsingCircleButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val ringColor = MaterialTheme.colorScheme.primary
@@ -55,7 +57,11 @@ fun SrPulsingCircleButton(text: String, onClick: () -> Unit, modifier: Modifier 
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text = text, color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(letterSpacing = 2.sp))
+        Text(
+            text = text.toUpperCase(Locale.current),
+            color = Color.White,
+            style = MaterialTheme.typography.headlineSmall.copy(letterSpacing = 2.sp),
+        )
     }
 }
 
@@ -71,6 +77,6 @@ private fun DrawScope.drawPulseRing(fraction: Float, color: Color) {
 @Composable
 private fun PulsingCircleButtonPreview() {
     ComponentPreview {
-        SrPulsingCircleButton(text = "START", onClick = {}, modifier = Modifier.padding(SpeedReaderTheme.spacing.xxxl))
+        SrPulsingCircleButton(text = "Start", onClick = {}, modifier = Modifier.padding(SpeedReaderTheme.spacing.xxxl))
     }
 }

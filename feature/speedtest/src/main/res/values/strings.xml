@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_speedtest_title" translatable="false">SpeedReader</string>
+    <string name="feature_speedtest_start">Start</string>
+    <string name="feature_speedtest_single_connection_title">Single connection only</string>
+    <string name="feature_speedtest_single_connection_description">Measure one transfer instead of %1$d in parallel</string>
+    <plurals name="feature_speedtest_connections">
+        <item quantity="one">%1$d connection</item>
+        <item quantity="other">%1$d connections</item>
+    </plurals>
+
+    <string name="feature_speedtest_finding_server">Finding the best server</string>
+    <string name="feature_speedtest_download">Download</string>
+    <string name="feature_speedtest_upload">Upload</string>
+    <string name="feature_speedtest_ping">Ping</string>
+    <string name="feature_speedtest_unit_mbps">Mbps</string>
+    <string name="feature_speedtest_unit_ms">ms</string>
+    <string name="feature_speedtest_remaining">%1$d s left</string>
+
+    <string name="feature_speedtest_caption_icmp">ICMP</string>
+    <string name="feature_speedtest_caption_live_average">live avg</string>
+    <string name="feature_speedtest_caption_average">average</string>
+    <string name="feature_speedtest_caption_up_next">up next</string>
+
+    <string name="feature_speedtest_stop">Stop</string>
+    <string name="feature_speedtest_back">Back</string>
+    <string name="feature_speedtest_share">Share</string>
+    <string name="feature_speedtest_test_complete">Test complete</string>
+    <string name="feature_speedtest_share_text">SpeedReader result\nDownload: %1$s Mbps\nUpload: %2$s Mbps\nPing: %3$s ms\nServer: %4$s</string>
+
+    <string name="feature_speedtest_error_offline_title">You\'re offline</string>
+    <string name="feature_speedtest_error_offline_text">Check your Wi-Fi or mobile data and try again.</string>
+    <string name="feature_speedtest_error_no_servers_title">No servers available</string>
+    <string name="feature_speedtest_error_no_servers_text">The server list came back empty. Try again later.</string>
+    <string name="feature_speedtest_error_no_server_reachable_title">No server answered</string>
+    <string name="feature_speedtest_error_no_server_reachable_text">None of the nearby servers responded to ping. Try again in a moment.</string>
+    <string name="feature_speedtest_error_connection_lost_title">The test was interrupted</string>
+    <string name="feature_speedtest_error_connection_lost_text">The connection dropped while measuring.</string>
+    <string name="feature_speedtest_error_unexpected_title">Something went wrong</string>
+    <string name="feature_speedtest_error_unexpected_text">The test could not finish. Try again in a moment.</string>
+</resources>
