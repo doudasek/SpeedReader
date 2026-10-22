@@ -226,6 +226,28 @@ class SpeedTestViewModelTest {
         assertEquals(SpeedTestPhase.Failed(FailureReason.ConnectionLost), viewModel.uiState.value.phase)
     }
 
+    @Test
+    fun explainsAnUnexpectedExceptionAsUnexpected() {
+        throughputRepository.downloadSamples = flow { throw IllegalStateException("Boom") }
+        val viewModel = createViewModel()
+
+        viewModel.onStartClick()
+
+        assertEquals(SpeedTestPhase.Failed(FailureReason.Unexpected), viewModel.uiState.value.phase)
+    }
+
+    @Test
+    fun startsAgainAfterAnUnexpectedException() {
+        throughputRepository.downloadSamples = flow { throw IllegalStateException("Boom") }
+        val viewModel = createViewModel()
+        viewModel.onStartClick()
+        throughputRepository.downloadSamples = flow { awaitCancellation() }
+
+        viewModel.onStartClick()
+
+        assertEquals(SpeedTestPhase.FindingServer, viewModel.uiState.value.phase)
+    }
+
     private fun createViewModel(savedState: SavedStateHandle = SavedStateHandle()) = SpeedTestViewModel(
         RunSpeedTestUseCase(
             serverRepository,

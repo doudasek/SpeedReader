@@ -27,6 +27,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.transformWhile
@@ -40,7 +41,8 @@ val PHASE_DURATION = TEST_DURATION / 2
  * [PHASE_DURATION] each, so both together take [TEST_DURATION]. Emits [SpeedTestProgress] along the way.
  *
  * The flow never throws; it ends with [SpeedTestProgress.Finished] or [SpeedTestProgress.Failed].
- * Cancelling the collection stops the run.
+ * An unexpected exception from a repository ends it as [SpeedTestError.Unknown]. Cancelling the
+ * collection stops the run.
  */
 class RunSpeedTestUseCase @Inject constructor(
     private val serverRepository: ServerRepository,
@@ -69,6 +71,9 @@ class RunSpeedTestUseCase @Inject constructor(
 
         Timber.i("Speed test finished: download %.1f Mbit/s, upload %.1f Mbit/s", download.megabitsPerSecond, upload.megabitsPerSecond)
         emit(SpeedTestProgress.Finished(server, download, upload))
+    }.catch { e ->
+        Timber.e(e, "Speed test crashed")
+        emit(SpeedTestProgress.Failed(SpeedTestError.Unknown(e)))
     }.onCompletion { cause ->
         if (cause is CancellationException) Timber.d("Speed test stopped before it finished")
     }
