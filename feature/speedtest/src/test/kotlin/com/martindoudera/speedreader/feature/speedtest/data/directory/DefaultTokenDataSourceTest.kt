@@ -2,6 +2,7 @@ package com.martindoudera.speedreader.feature.speedtest.data.directory
 
 import com.martindoudera.speedreader.feature.speedtest.data.di.DirectoryModule
 import com.martindoudera.speedreader.feature.speedtest.testing.data.testJson
+import java.io.IOException
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit

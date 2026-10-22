@@ -2,6 +2,7 @@ package com.martindoudera.speedreader.feature.speedtest.domain.usecase
 
 import com.martindoudera.speedreader.core.common.error.NetworkOutcome
 import com.martindoudera.speedreader.core.common.error.Outcome
+import com.martindoudera.speedreader.core.common.error.onFailure
 import com.martindoudera.speedreader.core.common.error.valueOrNull
 import com.martindoudera.speedreader.feature.speedtest.domain.SpeedTestError
 import com.martindoudera.speedreader.feature.speedtest.domain.SpeedTestOutcome
@@ -127,12 +128,9 @@ class RunSpeedTestUseCase @Inject constructor(
         return Outcome.Success(meter.average())
     }
 
-    private suspend fun <T> FlowCollector<SpeedTestProgress>.valueOrFail(outcome: SpeedTestOutcome<T>): T? = when (outcome) {
-        is Outcome.Failure -> {
-            Timber.e("Speed test failed: %s", outcome.error)
-            emit(SpeedTestProgress.Failed(outcome.error))
-            null
-        }
-        is Outcome.Success -> outcome.value
-    }
+    private suspend fun <T> FlowCollector<SpeedTestProgress>.valueOrFail(outcome: SpeedTestOutcome<T>): T? = outcome
+        .onFailure { error ->
+            Timber.e("Speed test failed: %s", error)
+            emit(SpeedTestProgress.Failed(error))
+        }.valueOrNull()
 }

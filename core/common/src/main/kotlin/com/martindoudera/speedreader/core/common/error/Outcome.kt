@@ -16,6 +16,18 @@ inline fun <T, E, F> Outcome<T, E>.mapError(transform: (E) -> F): Outcome<T, F> 
     is Outcome.Failure -> Outcome.Failure(transform(error))
 }
 
+/** Runs [action] on the value of a success, e.g. to log it, and returns the outcome unchanged. */
+inline fun <T, E> Outcome<T, E>.onSuccess(action: (T) -> Unit): Outcome<T, E> {
+    if (this is Outcome.Success) action(value)
+    return this
+}
+
+/** Runs [action] on the error of a failure, e.g. to log it, and returns the outcome unchanged. */
+inline fun <T, E> Outcome<T, E>.onFailure(action: (E) -> Unit): Outcome<T, E> {
+    if (this is Outcome.Failure) action(error)
+    return this
+}
+
 fun <T, E> Outcome<T, E>.valueOrNull(): T? = when (this) {
     is Outcome.Success -> value
     is Outcome.Failure -> null
