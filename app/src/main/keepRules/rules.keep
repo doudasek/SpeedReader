@@ -1,12 +1,29 @@
-# Add project specific R8 rules here.
-# AGP will combine all keep rule files in src/main/keepRules to pass to R8
+# Libraries ship their own rules (Retrofit, OkHttp, kotlinx.serialization, Hilt, Compose, coroutines),
+# so only the app's own reflection is covered here.
 #
-# For more details, see
-#   https://d.android.com/r/tools/r8/keep-rules
+# https://d.android.com/r/tools/r8/keep-rules
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Stack traces keep line numbers and can be retraced with mapping.txt.
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
+
+# Collapse every class into a single root package to make the bytecode harder to read.
+# Relies on -allowaccessmodification from proguard-android-optimize.txt. Use
+# -flattenpackagehierarchy '' instead for the gentler variant that keeps the package shape.
+-repackageclasses ''
+
+# Release drops verbose, debug and info logs with their arguments; warnings and errors stay.
+# Kotlin callers go through the Timber.Forest companion, not the static bridges.
+-assumenosideeffects class timber.log.Timber$Forest {
+    public void v(...);
+    public void d(...);
+ #   public void i(...);  # depends on business logic
+}
+
+# TokenInterceptor reads @RequiresToken from the Retrofit method through reflection.
+-keep,allowobfuscation @interface com.martindoudera.speedreader.feature.speedtest.data.directory.RequiresToken {
+    *;
+}
+-keep,allowobfuscation enum com.martindoudera.speedreader.feature.speedtest.data.directory.TokenPlacement {
+    *;
+}
