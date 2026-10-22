@@ -36,6 +36,14 @@ sealed interface SpeedTestPhase {
     data class Failed(val reason: FailureReason) : SpeedTestPhase
 }
 
+internal val SpeedTestPhase.server: ServerUiModel?
+    get() = when (this) {
+        is SpeedTestPhase.Downloading -> server
+        is SpeedTestPhase.Uploading -> server
+        is SpeedTestPhase.Finished -> server
+        SpeedTestPhase.Idle, SpeedTestPhase.FindingServer, is SpeedTestPhase.Failed -> null
+    }
+
 /** The selected server as the screen labels it; `location` is null when the directory names no city or country. */
 data class ServerUiModel(val name: String, val location: String?, val latency: Duration)
 
