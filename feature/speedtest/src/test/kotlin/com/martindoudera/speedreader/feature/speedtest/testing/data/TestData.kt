@@ -13,6 +13,10 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.serialization.json.Json
+import okhttp3.ResponseBody.Companion.toResponseBody
+import retrofit2.HttpException
+import retrofit2.Response
 
 val SAMPLE_INTERVAL = 250.milliseconds
 
@@ -29,3 +33,7 @@ fun steadyTransfer(bytesPerTick: Long, until: Duration): Flow<NetworkOutcome<Tra
     val ticks = (until / SAMPLE_INTERVAL).toInt()
     return (1..ticks).map { tick -> transferSample(tick, bytesPerTick * tick) }.asFlow()
 }
+
+val testJson = Json { ignoreUnknownKeys = true }
+
+fun httpError(code: Int) = HttpException(Response.error<Unit>(code, "".toResponseBody()))
