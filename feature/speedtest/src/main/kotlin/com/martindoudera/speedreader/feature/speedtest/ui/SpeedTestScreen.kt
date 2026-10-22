@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Dns
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,6 +37,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.martindoudera.speedreader.core.common.domain.model.AppVersion
 import com.martindoudera.speedreader.core.designsystem.R as DesignSystemR
 import com.martindoudera.speedreader.core.designsystem.adaptive.prefersTwoPanes
 import com.martindoudera.speedreader.core.designsystem.component.SrInfoChip
@@ -111,7 +113,9 @@ internal fun SpeedTestContent(
                 .padding(horizontal = if (twoPane) spacing.xxl else spacing.lg)
                 .padding(bottom = spacing.xl),
         ) {
-            SrTopBar(title = stringResource(R.string.feature_speedtest_title))
+            SrTopBar(title = stringResource(R.string.feature_speedtest_title)) {
+                VersionLabel(uiState.appVersion, visible = phase is SpeedTestPhase.Idle)
+            }
             if (twoPane) {
                 Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(spacing.xxl)) {
                     stage(Modifier.weight(1f).fillMaxHeight())
@@ -193,6 +197,18 @@ private fun ServerChip(uiState: SpeedTestUiState, modifier: Modifier = Modifier)
             modifier = visibleModifier,
         )
     }
+}
+
+/** The app version in the top bar's corner, shown on the start screen only. */
+@Composable
+private fun VersionLabel(version: AppVersion, visible: Boolean, modifier: Modifier = Modifier) {
+    val alpha by animateFloatAsState(if (visible) 1f else 0f, label = "versionLabel")
+    Text(
+        text = stringResource(R.string.feature_speedtest_version, version.name),
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier.graphicsLayer { this.alpha = alpha },
+    )
 }
 
 /** Fades content out before a run and after an error while keeping its space, so the stage does not move. */

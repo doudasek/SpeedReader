@@ -3,6 +3,7 @@ package com.martindoudera.speedreader.feature.speedtest.ui
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.martindoudera.speedreader.core.common.domain.model.AppVersion
 import com.martindoudera.speedreader.feature.speedtest.domain.model.ConnectionMode
 import com.martindoudera.speedreader.feature.speedtest.domain.usecase.RunSpeedTestUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,9 +27,13 @@ private const val CONNECTION_MODE_KEY = "connectionMode"
 class SpeedTestViewModel @Inject constructor(
     private val runSpeedTest: RunSpeedTestUseCase,
     private val savedStateHandle: SavedStateHandle,
+    appVersion: AppVersion,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(
-        SpeedTestUiState(connectionMode = savedStateHandle[CONNECTION_MODE_KEY] ?: ConnectionMode.Parallel),
+        SpeedTestUiState(
+            appVersion = appVersion,
+            connectionMode = savedStateHandle[CONNECTION_MODE_KEY] ?: ConnectionMode.Parallel,
+        ),
     )
     val uiState: StateFlow<SpeedTestUiState> = _uiState.asStateFlow()
 

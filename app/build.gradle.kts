@@ -4,18 +4,27 @@ plugins {
     id("speedreader.hilt")
 }
 
+// Semantic version; minor and patch stay below 100 so that versionCode keeps growing.
+val versionMajor = 0
+val versionMinor = 0
+val versionPatch = 1
+
 android {
     namespace = "com.martindoudera.speedreader"
 
     defaultConfig {
         applicationId = "com.martindoudera.speedreader"
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = versionMajor * 10_000 + versionMinor * 100 + versionPatch
+        versionName = "$versionMajor.$versionMinor.$versionPatch"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
         release {
             optimization {
                 enable = true
@@ -28,6 +37,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:common"))
     implementation(project(":core:designsystem"))
     implementation(project(":feature:speedtest"))
     implementation(libs.androidx.activity.compose)

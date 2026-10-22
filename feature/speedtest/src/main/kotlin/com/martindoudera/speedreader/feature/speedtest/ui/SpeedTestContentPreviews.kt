@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.martindoudera.speedreader.core.common.domain.model.AppVersion
 import com.martindoudera.speedreader.core.designsystem.component.ThemePreviews
 import com.martindoudera.speedreader.core.designsystem.theme.SpeedReaderTheme
 import com.martindoudera.speedreader.feature.speedtest.domain.model.Progress
@@ -47,7 +48,7 @@ private fun SpeedTestContentTabletPreview(@PreviewParameter(SpeedTestPhaseProvid
 internal fun ContentPreview(phase: SpeedTestPhase) {
     SpeedReaderTheme {
         SpeedTestContent(
-            uiState = SpeedTestUiState(phase = phase),
+            uiState = SpeedTestUiState(appVersion = AppVersion("0.0.1"), phase = phase),
             onStartClick = {},
             onStopClick = {},
             onBackClick = {},

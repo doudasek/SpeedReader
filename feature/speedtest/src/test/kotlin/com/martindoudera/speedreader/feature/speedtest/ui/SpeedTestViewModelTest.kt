@@ -1,6 +1,7 @@
 package com.martindoudera.speedreader.feature.speedtest.ui
 
 import androidx.lifecycle.SavedStateHandle
+import com.martindoudera.speedreader.core.common.domain.model.AppVersion
 import com.martindoudera.speedreader.core.common.error.NetworkError
 import com.martindoudera.speedreader.core.common.error.Outcome
 import com.martindoudera.speedreader.feature.speedtest.domain.model.ConnectionMode
@@ -48,7 +49,7 @@ class SpeedTestViewModelTest {
     fun startsIdleWithParallelConnections() {
         val viewModel = createViewModel()
 
-        assertEquals(SpeedTestUiState(ConnectionMode.Parallel, SpeedTestPhase.Idle), viewModel.uiState.value)
+        assertEquals(SpeedTestUiState(APP_VERSION, ConnectionMode.Parallel, SpeedTestPhase.Idle), viewModel.uiState.value)
     }
 
     @Test
@@ -257,9 +258,12 @@ class SpeedTestViewModelTest {
             SelectClosestServersUseCase(locationRepository),
         ),
         savedState,
+        APP_VERSION,
     )
 
     private companion object {
+        val APP_VERSION = AppVersion("0.0.1")
+
         val SERVER = SpeedTestServer(
             url = ServerUrl("https://speed.example.net:8080"),
             location = geoPoint(49.5, 16.0),
