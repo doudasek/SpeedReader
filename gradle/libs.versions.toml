@@ -21,6 +21,7 @@ spotless = "8.10.4"
 ktlint = "1.8.0"
 screenshot = "0.0.1-alpha16"
 konsist = "0.18.1"
+jacoco = "0.8.15"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
