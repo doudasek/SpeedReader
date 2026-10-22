@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_speedtest_start">Spustit</string>
+    <string name="feature_speedtest_single_connection_title">Jen jedno spojení</string>
+    <string name="feature_speedtest_single_connection_description">Měřit jeden přenos místo %1$d souběžných</string>
+    <plurals name="feature_speedtest_connections">
+        <item quantity="one">%1$d spojení</item>
+        <item quantity="few">%1$d spojení</item>
+        <item quantity="many">%1$d spojení</item>
+        <item quantity="other">%1$d spojení</item>
+    </plurals>
+
+    <string name="feature_speedtest_finding_server">Hledám nejlepší server</string>
+    <string name="feature_speedtest_download">Stahování</string>
+    <string name="feature_speedtest_upload">Odesílání</string>
+    <string name="feature_speedtest_ping">Ping</string>
+    <string name="feature_speedtest_unit_mbps">Mb/s</string>
+    <string name="feature_speedtest_unit_ms">ms</string>
+    <string name="feature_speedtest_remaining">zbývá %1$d s</string>
+
+    <string name="feature_speedtest_caption_icmp">ICMP</string>
+    <string name="feature_speedtest_caption_live_average">průběžný průměr</string>
+    <string name="feature_speedtest_caption_average">průměr</string>
+    <string name="feature_speedtest_caption_up_next">následuje</string>
+
+    <string name="feature_speedtest_stop">Zastavit</string>
+    <string name="feature_speedtest_back">Zpět</string>
+    <string name="feature_speedtest_share">Sdílet</string>
+    <string name="feature_speedtest_test_complete">Test dokončen</string>
+    <string name="feature_speedtest_share_text">Výsledek SpeedReader\nStahování: %1$s Mb/s\nOdesílání: %2$s Mb/s\nPing: %3$s ms\nServer: %4$s</string>
+
+    <string name="feature_speedtest_error_offline_title">Jste offline</string>
+    <string name="feature_speedtest_error_offline_text">Zkontrolujte Wi-Fi nebo mobilní data a zkuste to znovu.</string>
+    <string name="feature_speedtest_error_no_servers_title">Žádné servery nejsou k dispozici</string>
+    <string name="feature_speedtest_error_no_servers_text">Seznam serverů je prázdný. Zkuste to později.</string>
+    <string name="feature_speedtest_error_no_server_reachable_title">Žádný server neodpověděl</string>
+    <string name="feature_speedtest_error_no_server_reachable_text">Žádný z blízkých serverů neodpověděl na ping. Zkuste to za chvíli znovu.</string>
+    <string name="feature_speedtest_error_connection_lost_title">Test byl přerušen</string>
+    <string name="feature_speedtest_error_connection_lost_text">Během měření se přerušilo spojení.</string>
+    <string name="feature_speedtest_error_unexpected_title">Něco se pokazilo</string>
+    <string name="feature_speedtest_error_unexpected_text">Test se nepodařilo dokončit. Zkuste to za chvíli znovu.</string>
+</resources>
