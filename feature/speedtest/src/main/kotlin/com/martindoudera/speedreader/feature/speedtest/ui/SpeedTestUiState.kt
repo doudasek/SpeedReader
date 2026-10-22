@@ -1,12 +1,17 @@
 package com.martindoudera.speedreader.feature.speedtest.ui
 
+import com.martindoudera.speedreader.core.common.domain.model.AppVersion
 import com.martindoudera.speedreader.feature.speedtest.domain.model.ConnectionMode
 import com.martindoudera.speedreader.feature.speedtest.domain.model.Progress
 import com.martindoudera.speedreader.feature.speedtest.domain.model.Throughput
 import kotlin.time.Duration
 
 /** Everything the speed test screen shows. `connectionMode` is the user's choice for the next run. */
-data class SpeedTestUiState(val connectionMode: ConnectionMode = ConnectionMode.Parallel, val phase: SpeedTestPhase = SpeedTestPhase.Idle)
+data class SpeedTestUiState(
+    val appVersion: AppVersion,
+    val connectionMode: ConnectionMode = ConnectionMode.Parallel,
+    val phase: SpeedTestPhase = SpeedTestPhase.Idle,
+)
 
 /** What the screen is doing: the domain's `SpeedTestProgress` plus `Idle` before and between runs. */
 sealed interface SpeedTestPhase {

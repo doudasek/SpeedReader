@@ -3,6 +3,7 @@ package com.martindoudera.speedreader.core.designsystem.component
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -15,9 +16,9 @@ import androidx.compose.ui.res.painterResource
 import com.martindoudera.speedreader.core.designsystem.R
 import com.martindoudera.speedreader.core.designsystem.theme.SpeedReaderTheme
 
-/** The app's top bar: logo and app name, no actions. */
+/** The app's top bar: logo, app name and optional [trailingContent] at the end; no actions. */
 @Composable
-fun SrTopBar(title: String, modifier: Modifier = Modifier) {
+fun SrTopBar(title: String, modifier: Modifier = Modifier, trailingContent: @Composable RowScope.() -> Unit = {}) {
     Row(
         modifier = modifier.fillMaxWidth().height(SpeedReaderTheme.dimens.topBarHeight),
         horizontalArrangement = Arrangement.spacedBy(SpeedReaderTheme.spacing.md),
@@ -28,7 +29,8 @@ fun SrTopBar(title: String, modifier: Modifier = Modifier) {
             contentDescription = null,
             modifier = Modifier.size(SpeedReaderTheme.dimens.logo),
         )
-        Text(title, style = MaterialTheme.typography.titleLarge)
+        Text(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+        trailingContent()
     }
 }
 
@@ -36,6 +38,8 @@ fun SrTopBar(title: String, modifier: Modifier = Modifier) {
 @Composable
 private fun TopBarPreview() {
     ComponentPreview {
-        SrTopBar(title = "SpeedReader")
+        SrTopBar(title = "SpeedReader") {
+            Text("v0.0.1", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }
