@@ -1,5 +1,6 @@
 package com.martindoudera.speedreader.feature.speedtest.data.directory
 
+import java.io.IOException
 import java.net.HttpURLConnection.HTTP_UNAUTHORIZED
 import javax.inject.Inject
 import okhttp3.Interceptor
@@ -14,8 +15,11 @@ import timber.log.Timber
 /**
  * Signs requests of methods annotated with [RequiresToken] and leaves all others untouched.
  *
- * A request rejected with 401 is retried once with a fresh token. When no token can be issued,
+ * Measurement servers answer an expired, unknown or missing token with `401 Unauthorized`, so a
+ * request rejected with 401 is retried once with a fresh token. When no token can be issued,
  * the directory's HTTP status is returned as the response, so the caller sees it as an HTTP error.
+ * Any other token failure leaves as an `IOException`, the only exception OkHttp lets an
+ * interceptor throw without crashing an asynchronous call.
  */
 internal class TokenInterceptor @Inject constructor(private val tokenDataSource: TokenDataSource) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -23,20 +27,26 @@ internal class TokenInterceptor @Inject constructor(private val tokenDataSource:
         val placement = request.tag(Invocation::class.java)?.method()?.getAnnotation(RequiresToken::class.java)?.placement
             ?: return chain.proceed(request)
 
-        val token = try {
-            tokenDataSource.token()
+        return try {
+            chain.proceedSigned(request, placement)
         } catch (e: HttpException) {
             Timber.w(e, "Directory refused to issue a token")
-            return tokenUnavailable(request, e.code())
+            tokenUnavailable(request, e.code())
+        } catch (e: RuntimeException) {
+            throw IOException("Directory token unavailable", e)
         }
+    }
+
+    private fun Interceptor.Chain.proceedSigned(request: Request, placement: TokenPlacement): Response {
+        val token = tokenDataSource.token()
         Timber.v("Signing %s with the directory token", request.url.encodedPath)
-        val response = chain.proceed(request.signedWith(token, placement))
+        val response = proceed(request.signedWith(token, placement))
         if (response.code != HTTP_UNAUTHORIZED) return response
 
         Timber.w("%s rejected the token, renewing it and retrying once", request.url.encodedPath)
         response.close()
         tokenDataSource.invalidate(token)
-        return chain.proceed(request.signedWith(tokenDataSource.token(), placement))
+        return proceed(request.signedWith(tokenDataSource.token(), placement))
     }
 
     private fun Request.signedWith(token: DirectoryToken, placement: TokenPlacement): Request = when (placement) {

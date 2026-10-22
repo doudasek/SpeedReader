@@ -6,11 +6,14 @@ import javax.inject.Singleton
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
-import kotlinx.serialization.SerializationException
 import retrofit2.HttpException
 import timber.log.Timber
 
-/** Renew a token this long before the directory would expire it, so it cannot expire mid-request. */
+/**
+ * Renew a token this long before its TTL runs out. Servers check the token only when a request
+ * starts, so the margin only has to cover the time until the next request starts, not a whole
+ * transfer.
+ */
 internal val TOKEN_RENEWAL_MARGIN = 15.seconds
 
 /** Caches the token and renews it [TOKEN_RENEWAL_MARGIN] before its TTL runs out. Concurrent callers share one request. */

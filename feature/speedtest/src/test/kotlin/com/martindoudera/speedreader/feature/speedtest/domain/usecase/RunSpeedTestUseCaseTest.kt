@@ -214,10 +214,10 @@ class RunSpeedTestUseCaseTest {
     }
 
     @Test
-    fun parallelModeUsesFourConnectionsInEachDirection() = runTest {
+    fun parallelModeUsesSixConnectionsInEachDirection() = runTest {
         runSpeedTest(ConnectionMode.Parallel).toList()
 
-        assertEquals(listOf(4, 4), throughputRepository.requestedConnections)
+        assertEquals(listOf(6, 6), throughputRepository.requestedConnections)
     }
 
     private companion object {

@@ -6,6 +6,7 @@ import com.martindoudera.speedreader.feature.speedtest.data.directory.TokenDataS
 /** Issues `token-1`, `token-2`, … and a new one only after the current one is invalidated or cleared. */
 internal class FakeTokenDataSource : TokenDataSource {
     var failure: Exception? = null
+    var renewalFailure: Exception? = null
 
     var issuedTokens = 0
         private set
@@ -17,7 +18,9 @@ internal class FakeTokenDataSource : TokenDataSource {
 
     override fun token(): DirectoryToken {
         failure?.let { throw it }
-        return current ?: DirectoryToken("token-${++issuedTokens}").also { current = it }
+        current?.let { return it }
+        if (issuedTokens > 0) renewalFailure?.let { throw it }
+        return DirectoryToken("token-${++issuedTokens}").also { current = it }
     }
 
     override fun invalidate(token: DirectoryToken) {

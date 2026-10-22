@@ -74,6 +74,15 @@ class ThroughputMeterTest {
         assertEquals(8.0, throughput.bitsPerSecond)
     }
 
+    @Test
+    fun megabitsUseTheDecimalMega() {
+        val throughput = Throughput(163_500_000.0)
+
+        val megabits = throughput.megabitsPerSecond
+
+        assertEquals(163.5, megabits, 1e-9)
+    }
+
     private var ticksRecorded = 0
 
     private fun recordSteadyRate(bytesPerTick: Long, ticks: Int): Throughput {

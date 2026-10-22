@@ -9,6 +9,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.SerializationException
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import okhttp3.OkHttpClient
@@ -110,6 +111,26 @@ class TokenInterceptorTest {
         val failure = assertFailsWith<HttpException> { api.header() }
 
         assertEquals(503, failure.code())
+        assertEquals(0, server.requestCount)
+    }
+
+    @Test
+    fun refusedRenewalAfterRejectionIsReportedWithTheDirectoryStatus() = runTest {
+        tokenDataSource.renewalFailure = httpError(503)
+        server.enqueue(MockResponse(code = 401))
+
+        val failure = assertFailsWith<HttpException> { api.header() }
+
+        assertEquals(503, failure.code())
+        assertEquals(1, server.requestCount)
+    }
+
+    @Test
+    fun malformedTokenIsAnIoFailure() = runTest {
+        tokenDataSource.failure = SerializationException("unexpected token")
+
+        assertFailsWith<IOException> { api.header() }
+
         assertEquals(0, server.requestCount)
     }
 

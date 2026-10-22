@@ -2,7 +2,6 @@ package com.martindoudera.speedreader.feature.speedtest.data.directory
 
 import com.martindoudera.speedreader.feature.speedtest.data.di.DirectoryModule
 import com.martindoudera.speedreader.feature.speedtest.testing.data.testJson
-import java.io.IOException
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -10,6 +9,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TestTimeSource
+import kotlinx.serialization.SerializationException
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import okhttp3.OkHttpClient
@@ -123,10 +123,10 @@ class DefaultTokenDataSourceTest {
     @Test
     fun concurrentCallersShareOneRequest() {
         server.enqueue(MockResponse.Builder().body(tokenJson("shared")).headersDelay(200, TimeUnit.MILLISECONDS).build())
-        enqueueTokens("second", "third", "fourth")
-        val executor = Executors.newFixedThreadPool(4)
+        enqueueTokens("second", "third", "fourth", "fifth", "sixth")
+        val executor = Executors.newFixedThreadPool(6)
 
-        val tokens = executor.invokeAll(List(4) { Callable { dataSource.token() } }).map { it.get() }
+        val tokens = executor.invokeAll(List(6) { Callable { dataSource.token() } }).map { it.get() }
 
         executor.shutdown()
         assertEquals(setOf(DirectoryToken("shared")), tokens.toSet())
