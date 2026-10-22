@@ -2,10 +2,12 @@ package com.martindoudera.speedreader.feature.speedtest.data.directory
 
 import com.martindoudera.speedreader.feature.speedtest.data.di.DIRECTORY_BASE_URL
 import com.martindoudera.speedreader.feature.speedtest.data.di.DirectoryModule
+import com.martindoudera.speedreader.feature.speedtest.data.directory.dto.IpLocationDto
 import com.martindoudera.speedreader.feature.speedtest.testing.data.testJson
 import com.martindoudera.speedreader.feature.speedtest.testing.directory.FakeTokenDataSource
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.SerializationException
 import mockwebserver3.MockResponse
@@ -54,9 +56,36 @@ class SpeedTestDirectoryApiTest {
     }
 
     @Test
+    fun clientLocationIsRequestedWithoutTokenAndKeepsOnlyWhatWeUse() = runTest {
+        server.enqueue(MockResponse(body = IP_RESPONSE))
+
+        val location = api.clientLocation()
+
+        val request = server.takeRequest()
+        assertEquals(IpLocationDto(lat = 49.1953, lon = 16.6016, countryCode = "CZ"), location)
+        assertEquals("/api/v1/ip", request.url.encodedPath)
+        assertNull(request.headers[TOKEN_HEADER])
+    }
+
+    @Test
     fun captivePortalPageFailsToDecode() = runTest {
         server.enqueue(MockResponse(body = "<html><body>Sign in to Wi-Fi</body></html>"))
 
         assertFailsWith<SerializationException> { api.servers() }
+    }
+
+    private companion object {
+        const val IP_RESPONSE = """{
+            "ip": "203.0.113.7",
+            "isp": "Example ISP",
+            "ispImg": "https://static.ui.com/asn/example.png",
+            "org": "Example ISP",
+            "reverse": null,
+            "country": "Czechia",
+            "countryCode": "CZ",
+            "lat": 49.1953,
+            "lon": 16.6016,
+            "timezone": "Europe/Prague"
+        }"""
     }
 }

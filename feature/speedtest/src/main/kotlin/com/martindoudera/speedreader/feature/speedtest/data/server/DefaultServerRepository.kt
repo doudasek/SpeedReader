@@ -1,8 +1,8 @@
 package com.martindoudera.speedreader.feature.speedtest.data.server
 
 import com.martindoudera.speedreader.core.common.error.NetworkOutcome
-import com.martindoudera.speedreader.core.common.error.Outcome
 import com.martindoudera.speedreader.core.common.error.map
+import com.martindoudera.speedreader.core.common.error.onFailure
 import com.martindoudera.speedreader.core.network.safeApiCall
 import com.martindoudera.speedreader.feature.speedtest.data.directory.SpeedTestDirectoryApi
 import com.martindoudera.speedreader.feature.speedtest.data.directory.TokenDataSource
@@ -36,9 +36,9 @@ internal class DefaultServerRepository @Inject constructor(
     override suspend fun servers(): NetworkOutcome<List<SpeedTestServer>> {
         Timber.d("Loading the server list")
         tokenDataSource.clear()
-        val outcome = safeApiCall { api.servers() }.map { entries -> entries.decodeServers() }
-        if (outcome is Outcome.Failure) Timber.e("Loading the server list failed: %s", outcome.error)
-        return outcome
+        return safeApiCall { api.servers() }
+            .map { entries -> entries.decodeServers() }
+            .onFailure { error -> Timber.e("Loading the server list failed: %s", error) }
     }
 
     private fun JsonArray.decodeServers(): List<SpeedTestServer> {

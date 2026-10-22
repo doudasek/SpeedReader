@@ -6,6 +6,7 @@ import javax.inject.Singleton
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
+import kotlinx.serialization.SerializationException
 import retrofit2.HttpException
 import timber.log.Timber
 
