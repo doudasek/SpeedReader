@@ -12,8 +12,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 
 private const val BLINK_DURATION_MILLIS = 600
@@ -27,5 +27,5 @@ internal fun LiveDot(color: Color, modifier: Modifier = Modifier) {
         animationSpec = infiniteRepeatable(tween(BLINK_DURATION_MILLIS), RepeatMode.Reverse),
         label = "liveDot",
     )
-    Box(modifier.size(7.dp).alpha(alpha).background(color, CircleShape))
+    Box(modifier.size(7.dp).graphicsLayer { this.alpha = alpha }.background(color, CircleShape))
 }
