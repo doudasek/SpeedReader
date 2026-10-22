@@ -24,7 +24,10 @@ import kotlin.test.assertTrue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -207,6 +210,25 @@ class RunSpeedTestUseCaseTest {
 
         assertEquals(Failed(SpeedTestError.Network(error)), states.last())
         assertTrue(states.none { it is Uploading })
+    }
+
+    @Test
+    fun unexpectedExceptionEndsTheRunAsUnknownInsteadOfThrowing() = runTest {
+        val exception = IllegalStateException("Boom")
+        throughputRepository.downloadSamples = flow { throw exception }
+
+        val states = runSpeedTest(ConnectionMode.Parallel).toList()
+
+        assertEquals(Failed(SpeedTestError.Unknown(exception)), states.last())
+    }
+
+    @Test
+    fun stoppingTheRunIsNotReportedAsAFailure() = runTest {
+        throughputRepository.downloadSamples = flow { awaitCancellation() }
+
+        val states = runSpeedTest(ConnectionMode.Parallel).take(1).toList()
+
+        assertEquals(listOf(FindingServer), states)
     }
 
     @Test
