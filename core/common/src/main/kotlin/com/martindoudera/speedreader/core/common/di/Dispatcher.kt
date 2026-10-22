@@ -4,9 +4,7 @@ import javax.inject.Qualifier
 
 @Qualifier
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Dispatcher(
-    val dispatcher: SpeedReaderDispatcher,
-)
+annotation class Dispatcher(val dispatcher: SpeedReaderDispatcher)
 
 enum class SpeedReaderDispatcher {
     Default,

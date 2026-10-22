@@ -4,10 +4,10 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.serialization.json.Json
-import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
+import kotlinx.serialization.json.Json
+import okhttp3.OkHttpClient
 
 private const val TIMEOUT_SECONDS = 10L
 
@@ -16,19 +16,17 @@ private const val TIMEOUT_SECONDS = 10L
 internal object NetworkModule {
     @Provides
     @Singleton
-    fun providesJson(): Json =
-        Json {
-            ignoreUnknownKeys = true
-            coerceInputValues = true
-        }
+    fun providesJson(): Json = Json {
+        ignoreUnknownKeys = true
+        coerceInputValues = true
+    }
 
     @Provides
     @Singleton
-    fun providesOkHttpClient(): OkHttpClient =
-        OkHttpClient
-            .Builder()
-            .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .writeTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .build()
+    fun providesOkHttpClient(): OkHttpClient = OkHttpClient
+        .Builder()
+        .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        .writeTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        .build()
 }

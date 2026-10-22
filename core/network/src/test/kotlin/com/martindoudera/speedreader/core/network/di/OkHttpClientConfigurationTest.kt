@@ -1,8 +1,8 @@
 package com.martindoudera.speedreader.core.network.di
 
+import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.util.concurrent.TimeUnit
 
 class OkHttpClientConfigurationTest {
     private val client = NetworkModule.providesOkHttpClient()
