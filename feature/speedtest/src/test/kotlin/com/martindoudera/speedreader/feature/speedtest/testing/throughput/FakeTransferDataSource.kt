@@ -9,7 +9,8 @@ import kotlinx.coroutines.delay
 
 /**
  * Moves [bytesPerTick] every [tick] of virtual time per request. A request ends after
- * [bytesPerRequest] and, when [failure] is set, fails once it has run for [failAfter].
+ * [bytesPerRequest] and, when [failure] is set, fails once it has run for [failAfter]; only the
+ * first [failingRequests] requests fail.
  *
  * The 40 ms tick never coincides with a 250 ms sample, so a test never depends on which of two
  * coroutines due at the same virtual instant runs first.
@@ -22,6 +23,7 @@ internal class FakeTransferDataSource :
     var bytesPerRequest = Long.MAX_VALUE
     var failure: Exception? = null
     var failAfter = Duration.ZERO
+    var failingRequests = Int.MAX_VALUE
 
     val requestedServers = mutableListOf<ServerUrl>()
     var activeRequests = 0
@@ -33,6 +35,7 @@ internal class FakeTransferDataSource :
 
     private suspend fun transfer(server: ServerUrl, onBytes: (Long) -> Unit) {
         requestedServers += server
+        val failing = requestedServers.size <= failingRequests
         activeRequests++
         try {
             var sent = 0L
@@ -40,7 +43,7 @@ internal class FakeTransferDataSource :
             while (sent < bytesPerRequest) {
                 delay(tick)
                 running += tick
-                failure?.takeIf { running >= failAfter }?.let { throw it }
+                failure?.takeIf { failing && running >= failAfter }?.let { throw it }
                 onBytes(bytesPerTick)
                 sent += bytesPerTick
             }
