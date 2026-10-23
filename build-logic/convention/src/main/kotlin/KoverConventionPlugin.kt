@@ -45,6 +45,7 @@ class KoverConventionPlugin : Plugin<Project> {
                 }
                 reports.filters.excludes {
                     androidGeneratedClasses()
+                    annotatedBy("dagger.Module")
                     classes(coverageExclusions)
                 }
             }
