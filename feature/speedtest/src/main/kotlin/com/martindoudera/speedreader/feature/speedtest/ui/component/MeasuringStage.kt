@@ -23,9 +23,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.sp
+import com.martindoudera.speedreader.core.designsystem.component.MIN_FITTED_TEXT_SIZE
 import com.martindoudera.speedreader.core.designsystem.component.ProgressSegment
 import com.martindoudera.speedreader.core.designsystem.component.SrIndeterminateProgressBar
 import com.martindoudera.speedreader.core.designsystem.component.SrSegmentedProgressBar
@@ -74,7 +75,7 @@ internal fun MeasuringStage(phase: SpeedTestPhase, modifier: Modifier = Modifier
                     color = if (reading.uploading) colors.upload else colors.download,
                 )
                 Text(
-                    text = reading.currentSpeed.formatMegabits(),
+                    text = reading.currentSpeed.formatMegabits(SpeedReaderTheme.locale),
                     style = MaterialTheme.typography.displayLarge,
                     modifier = Modifier.padding(top = spacing.md),
                 )
@@ -122,7 +123,12 @@ private fun RowScope.TimelineLabel(text: String, align: TextAlign) {
         textAlign = align,
         softWrap = false,
         maxLines = 1,
-        autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = style.fontSize),
+        autoSize = TextAutoSize.StepBased(
+            minFontSize = with(LocalDensity.current) {
+                MIN_FITTED_TEXT_SIZE.toSp()
+            },
+            maxFontSize = style.fontSize,
+        ),
         modifier = Modifier.weight(1f),
     )
 }

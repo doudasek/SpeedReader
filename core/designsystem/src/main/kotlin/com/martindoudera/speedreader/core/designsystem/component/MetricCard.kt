@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -34,7 +35,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
-import androidx.compose.ui.unit.sp
 import com.martindoudera.speedreader.core.designsystem.theme.SpeedReaderTheme
 
 /** Where a [SrMetricCard]'s value stands: not measured yet, being measured, or final. */
@@ -74,7 +74,7 @@ fun SrMetricCard(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.xs + spacing.xxs)) {
             Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(SpeedReaderTheme.dimens.iconSmall))
-            FittedText(label, MaterialTheme.typography.labelMedium, MaterialTheme.colorScheme.onSurfaceVariant)
+            FittedText(label, MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         ValueWithUnit(
             value = value,
@@ -93,7 +93,7 @@ fun SrMetricCard(
                 MetricStatus.Idle -> Unit
             }
             if (caption != null) {
-                FittedText(caption, MaterialTheme.typography.labelSmall, MaterialTheme.colorScheme.onSurfaceVariant)
+                FittedText(caption, MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
@@ -124,7 +124,7 @@ private fun ValueWithUnit(value: String, unit: String, valueStyle: TextStyle, mo
 
 /** One line of text in [style] that shrinks to fit the width rather than wrapping or being cut off. */
 @Composable
-private fun FittedText(text: AnnotatedString, style: TextStyle, color: Color = Color.Unspecified, modifier: Modifier = Modifier) {
+private fun FittedText(text: AnnotatedString, style: TextStyle, modifier: Modifier = Modifier, color: Color = Color.Unspecified) {
     Text(
         text = text,
         style = style,
@@ -132,17 +132,24 @@ private fun FittedText(text: AnnotatedString, style: TextStyle, color: Color = C
         modifier = modifier,
         softWrap = false,
         maxLines = 1,
-        autoSize = TextAutoSize.StepBased(minFontSize = MIN_FITTED_FONT_SIZE, maxFontSize = style.fontSize),
+        autoSize = TextAutoSize.StepBased(
+            minFontSize = with(LocalDensity.current) {
+                MIN_FITTED_TEXT_SIZE.toSp()
+            },
+            maxFontSize = style.fontSize,
+        ),
     )
 }
 
 @Composable
-private fun FittedText(text: String, style: TextStyle, color: Color = Color.Unspecified, modifier: Modifier = Modifier) =
-    FittedText(AnnotatedString(text), style, color, modifier)
+private fun FittedText(text: String, style: TextStyle, modifier: Modifier = Modifier, color: Color = Color.Unspecified) =
+    FittedText(AnnotatedString(text), style, modifier, color)
 
 /** A three-per-em space: at the unit's size, about as wide as the gap the separate texts used to have. */
 private const val UNIT_SEPARATOR = "\u2004"
-private val MIN_FITTED_FONT_SIZE = 8.sp
+
+/** In dp, not sp, so that the floor holds at any font scale; an sp floor doubles at 2x and stops the shrinking. */
+val MIN_FITTED_TEXT_SIZE = 9.dp
 
 @ThemePreviews
 @Composable

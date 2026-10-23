@@ -18,7 +18,10 @@ private const val READ_SIZE = 64L * 1024
 internal class DefaultDownloadDataSource @Inject constructor(private val api: MeasurementApi) : DownloadDataSource {
     override suspend fun download(server: ServerUrl, onBytes: (Long) -> Unit) {
         api.download(server.endpoint("download"), DOWNLOAD_REQUEST_SIZE, cacheBuster()).executeCancellably { response ->
-            if (!response.isSuccessful) throw HttpException(response)
+            if (!response.isSuccessful) {
+                response.errorBody()?.close()
+                throw HttpException(response)
+            }
             val body = response.body() ?: throw IOException("Empty download response")
             body.use {
                 val source = it.source()

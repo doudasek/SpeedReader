@@ -11,6 +11,4 @@ internal interface TokenDataSource {
     fun token(): DirectoryToken
 
     fun invalidate(token: DirectoryToken)
-
-    fun clear()
 }

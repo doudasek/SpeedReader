@@ -3,14 +3,12 @@ package com.martindoudera.speedreader.feature.speedtest.testing.directory
 import com.martindoudera.speedreader.feature.speedtest.data.directory.DirectoryToken
 import com.martindoudera.speedreader.feature.speedtest.data.directory.TokenDataSource
 
-/** Issues `token-1`, `token-2`, … and a new one only after the current one is invalidated or cleared. */
+/** Issues `token-1`, `token-2`, … and a new one only after the current one is invalidated. */
 internal class FakeTokenDataSource : TokenDataSource {
     var failure: Exception? = null
     var renewalFailure: Exception? = null
 
     var issuedTokens = 0
-        private set
-    var clears = 0
         private set
     val invalidated = mutableListOf<DirectoryToken>()
 
@@ -26,10 +24,5 @@ internal class FakeTokenDataSource : TokenDataSource {
     override fun invalidate(token: DirectoryToken) {
         invalidated += token
         if (current == token) current = null
-    }
-
-    override fun clear() {
-        clears++
-        current = null
     }
 }

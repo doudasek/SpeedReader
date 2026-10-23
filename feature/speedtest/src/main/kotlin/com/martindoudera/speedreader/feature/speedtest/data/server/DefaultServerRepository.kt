@@ -5,7 +5,6 @@ import com.martindoudera.speedreader.core.common.error.map
 import com.martindoudera.speedreader.core.common.error.onFailure
 import com.martindoudera.speedreader.core.network.safeApiCall
 import com.martindoudera.speedreader.feature.speedtest.data.directory.SpeedTestDirectoryApi
-import com.martindoudera.speedreader.feature.speedtest.data.directory.TokenDataSource
 import com.martindoudera.speedreader.feature.speedtest.data.directory.dto.ServerDto
 import com.martindoudera.speedreader.feature.speedtest.domain.model.GeoPoint
 import com.martindoudera.speedreader.feature.speedtest.domain.model.Latitude
@@ -22,20 +21,13 @@ import timber.log.Timber
 /**
  * Loads the HTTPS servers the directory offers for this client.
  *
- * Loading the list is the first step of every speed test, so it also drops the cached directory
- * token: each run starts with a fresh one.
- *
  * Entries are decoded one by one, so a malformed entry or one with impossible coordinates is
  * dropped instead of failing the whole list.
  */
-internal class DefaultServerRepository @Inject constructor(
-    private val api: SpeedTestDirectoryApi,
-    private val tokenDataSource: TokenDataSource,
-    private val json: Json,
-) : ServerRepository {
+internal class DefaultServerRepository @Inject constructor(private val api: SpeedTestDirectoryApi, private val json: Json) :
+    ServerRepository {
     override suspend fun servers(): NetworkOutcome<List<SpeedTestServer>> {
         Timber.d("Loading the server list")
-        tokenDataSource.clear()
         return safeApiCall { api.servers() }
             .map { entries -> entries.decodeServers() }
             .onFailure { error -> Timber.e("Loading the server list failed: %s", error) }

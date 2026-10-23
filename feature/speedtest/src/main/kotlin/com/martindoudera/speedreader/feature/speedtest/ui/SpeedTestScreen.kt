@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -58,6 +59,7 @@ fun SpeedTestScreen(modifier: Modifier = Modifier, viewModel: SpeedTestViewModel
     val phase = uiState.phase
 
     BackHandler(enabled = phase is SpeedTestPhase.Finished || phase is SpeedTestPhase.Failed, onBack = viewModel::onBackClick)
+    val running = phase is SpeedTestPhase.FindingServer || phase is SpeedTestPhase.Downloading || phase is SpeedTestPhase.Uploading
 
     SpeedTestContent(
         uiState = uiState,
@@ -66,7 +68,7 @@ fun SpeedTestScreen(modifier: Modifier = Modifier, viewModel: SpeedTestViewModel
         onBackClick = viewModel::onBackClick,
         onShareClick = context::shareText,
         onSingleConnectionChange = viewModel::onSingleConnectionChange,
-        modifier = modifier,
+        modifier = if (running) modifier.keepScreenOn() else modifier,
     )
 }
 
@@ -224,8 +226,8 @@ private fun shareText(result: SpeedTestPhase.Finished): String {
     val server = result.server
     return stringResource(
         R.string.feature_speedtest_share_text,
-        result.downloadSpeed.formatMegabits(),
-        result.uploadSpeed.formatMegabits(),
+        result.downloadSpeed.formatMegabits(SpeedReaderTheme.locale),
+        result.uploadSpeed.formatMegabits(SpeedReaderTheme.locale),
         server.latency?.formatMilliseconds() ?: NO_VALUE,
         listOfNotNull(server.name, server.location).joinToString(", "),
     )

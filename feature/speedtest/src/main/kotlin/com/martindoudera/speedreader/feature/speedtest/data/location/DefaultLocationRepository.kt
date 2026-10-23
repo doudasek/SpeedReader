@@ -33,6 +33,7 @@ internal class DefaultLocationRepository @Inject constructor(private val api: Sp
     }
 
     private fun IpLocationDto.toGeoPoint(): GeoPoint = try {
+        if (lat == 0.0 && lon == 0.0) throw SerializationException("IP not located, (0, 0) is a placeholder")
         GeoPoint(Latitude(lat), Longitude(lon)).also { Timber.d("Located by IP in %s", countryCode) }
     } catch (e: IllegalArgumentException) {
         throw SerializationException("IP location out of range", e)

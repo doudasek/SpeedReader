@@ -32,13 +32,11 @@ internal class TokenInterceptor @Inject constructor(private val tokenDataSource:
         } catch (e: HttpException) {
             Timber.w(e, "Directory refused to issue a token")
             tokenUnavailable(request, e.code())
-        } catch (e: RuntimeException) {
-            throw IOException("Directory token unavailable", e)
         }
     }
 
     private fun Interceptor.Chain.proceedSigned(request: Request, placement: TokenPlacement): Response {
-        val token = tokenDataSource.token()
+        val token = issueToken()
         Timber.v("Signing %s with the directory token", request.url.encodedPath)
         val response = proceed(request.signedWith(token, placement))
         if (response.code != HTTP_UNAUTHORIZED) return response
@@ -46,7 +44,16 @@ internal class TokenInterceptor @Inject constructor(private val tokenDataSource:
         Timber.w("%s rejected the token, renewing it and retrying once", request.url.encodedPath)
         response.close()
         tokenDataSource.invalidate(token)
-        return proceed(request.signedWith(tokenDataSource.token(), placement))
+        return proceed(request.signedWith(issueToken(), placement))
+    }
+
+    /** Wraps only the token's own failures, so an exception from the request itself is not blamed on the token. */
+    private fun issueToken(): DirectoryToken = try {
+        tokenDataSource.token()
+    } catch (e: HttpException) {
+        throw e
+    } catch (e: RuntimeException) {
+        throw IOException("Directory token unavailable", e)
     }
 
     private fun Request.signedWith(token: DirectoryToken, placement: TokenPlacement): Request = when (placement) {

@@ -27,6 +27,15 @@ class SpeedTestFormatTest {
     }
 
     @Test
+    fun speedsThatRoundToOneHundredAreWholeNumbers() {
+        val speed = Throughput(99_960_000.0)
+
+        val text = speed.formatMegabits(Locale.US)
+
+        assertEquals("100", text)
+    }
+
+    @Test
     fun theDecimalSeparatorFollowsTheLocale() {
         val speed = Throughput(41_549_000.0)
 
@@ -51,5 +60,14 @@ class SpeedTestFormatTest {
         val text = latency.formatMilliseconds()
 
         assertEquals("9", text)
+    }
+
+    @Test
+    fun subMillisecondLatencyIsNotShownAsZero() {
+        val latency = 0.4.milliseconds
+
+        val text = latency.formatMilliseconds()
+
+        assertEquals("<1", text)
     }
 }
