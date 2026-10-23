@@ -1,5 +1,7 @@
 # SpeedReader
 
+[![Checks](https://github.com/doudasek/SpeedReader/actions/workflows/pr-checks.yml/badge.svg?branch=main)](https://github.com/doudasek/SpeedReader/actions/workflows/pr-checks.yml?query=branch%3Amain)
+
 A native Android speed test against Ubiquiti's measurement servers. It fetches the server list from
 `sp-dir.uwn.com`, picks the five closest servers, pings them with real ICMP, and measures download
 and upload against the one with the lowest round-trip time.
@@ -25,7 +27,12 @@ The project is written as production code, not a prototype:
 - **Release build:** R8 with ProGuard rules shrinks, optimises and obfuscates the code, repackages
   all classes into one package, strips debug logging, and keeps line numbers so crash stack traces
   can be retraced with `mapping.txt`.
-- **Adaptive UI** for phones, foldables and tablets via window size classes.
+- **Error handling:** failures are sealed types wrapped in `Outcome`, so the UI handles every case
+  exhaustively.
+- **Security:** HTTPS only, with cleartext traffic blocked also on API 26 and 27, where Android
+  still allows it by default.
+- **UI:** adaptive layouts for phones, foldables and tablets via window size classes, edge-to-edge,
+  light and dark theme, English and Czech localisation.
 
 This is the setup I currently use in production apps.
 
@@ -64,6 +71,15 @@ it yourself:
 ./gradlew installDebug
 ```
 
+The same checks the pull request runs, locally:
+
+```bash
+./gradlew spotlessCheck                 # formatting
+./gradlew testDebugUnitTest             # unit tests, including the Konsist rules
+./gradlew validateDebugScreenshotTest   # screenshot tests
+./gradlew :koverVerifyCoverage          # coverage of at least 80 %
+```
+
 Minimum SDK is 26, because only from Android 8.0 does `InetAddress.isReachable()` send a real ICMP
 echo instead of a TCP connect to port 7 (see 4).
 
@@ -72,6 +88,16 @@ Actions checks passing (Spotless, build, unit tests with coverage, screenshot te
 example, a real pull request should never be this big. For small pull requests I normally prefer
 squash merging, which keeps the history linear with references to JIRA tickets. Here I chose rebase
 to keep the individual commits in the history.
+
+## How a speed test runs
+
+1. Get a token from the directory (`POST /api/v1/tokens`, valid for 80 s).
+2. Fetch the server list (`GET /api/v2/servers`).
+3. Get the location of the public IP (`GET /api/v1/ip`).
+4. Pick the five servers closest to that location.
+5. Ping each of them with ICMP and pick the one with the lowest round-trip time.
+6. Measure download for 7.5 s, then upload for 7.5 s, over six parallel connections or one. The
+   screen shows the live speed during the run and the average at the end.
 
 ## Decisions I had to make myself
 
@@ -131,9 +157,9 @@ The assignment does not say how many connections to measure with, and speed test
 measure over a single connection, others over several in parallel. The wifiman web client uses six
 parallel connections when it measures against a single server, and twelve spread over up to four
 servers in its normal run. This app measures one server at a time, so six is the default here, and
-a **"Single connection only"** checkbox switches to one. The two answer different questions, what the link can carry versus what one transfer
-achieves, so I left the choice to the user rather than hiding it behind one number. Both modes
-are the same code path with a different connection count.
+a **"Single connection only"** checkbox switches to one. The two answer different questions, what
+the link can carry versus what one transfer achieves, so I left the choice to the user rather than
+hiding it behind one number. Both modes are the same code path with a different connection count.
 
 ### 4. Real ICMP ping, with a fallback
 
@@ -142,8 +168,8 @@ on Android 8.0+ sends a real ICMP echo over an unprivileged ping socket and fall
 port 7 only when ICMP gets no answer. Such slower answers are discarded. Each server gets up to
 three 500 ms probes and the minimum RTT wins, since queueing only ever adds delay. Some networks
 block ICMP entirely. Instead of failing a test that HTTP could still run, the app then measures
-against the closest candidate and shows the ping as "—". Emulator RTTs are
-meaningless, so ping must be checked on a real device.
+against the closest candidate and shows the ping as "—". Emulator RTTs are meaningless, so ping
+must be checked on a real device.
 
 ### 5. Test duration
 
@@ -157,9 +183,21 @@ is a one-constant change.
 - **Accessibility pass.** No TalkBack walk-through yet: live speed and phase changes are not
   announced (`liveRegion`), metric cards are not merged into one focusable unit, the title is not
   marked as a heading.
-- **Retries.** Apart from the token refresh, nothing retries and a failed run is restarted with Start.
-  Transient directory failures deserve a short, time-boxed backoff. A dropped transfer stream is
-  not reopened. The others carry on, and the test fails only when all of them fail.
+- **UI tests.** The screen is covered by ViewModel tests and screenshot tests, but there are no
+  Compose UI tests yet. Next would be tests that click through a run (Start, Stop, the
+  single-connection checkbox, Back and Share on the result) against fake repositories injected
+  with Hilt, and assert the semantics tree, which also guards the accessibility fixes above.
+- **Integration tests against the real API.** The HTTP layer is tested with MockWebServer only. A
+  small scheduled CI job calling the live directory and one measurement server would show early
+  when the undocumented API changes.
+- **Baseline Profiles.** There is no Baseline Profile or startup profile yet, so on first launch
+  Compose and the rest of the code run interpreted or JIT compiled until ART has collected its own
+  runtime profile. A `:baselineprofile` module with a Macrobenchmark journey (launch, start a test,
+  show the result) would ship the profile with the app, and the same module would measure startup
+  and frame timing.
+- **Retries.** Apart from the token refresh, nothing retries and a failed run is restarted with
+  Start. Transient directory failures deserve a short, time-boxed backoff. A dropped transfer
+  stream is not reopened. The others carry on, and the test fails only when all of them fail.
 - **Average speed.** It is plain total bytes over total time, so TCP slow start counts and the result
   reads a few percent lower than wifiman's, which trims the samples. Trimming is worth revisiting
   with more measurements.
@@ -173,8 +211,6 @@ is a one-constant change.
   failure-rate analytics per error type would catch the API breaking.
 - **Release signing and distribution.** There is no signing config and no pipeline to Google Play
   (signed AAB, service account, internal track).
-- **Privacy policy and Data safety.** Each run sends the public IP to Ubiquiti, which Play counts
-  as data shared with a third party.
 - **Richer UI.** A gauge or live throughput graph, details of each candidate server with its RTT,
   jitter, and a history of past runs. Foldable postures (tabletop, book) are handled only through
   the window size, not through `FoldingFeature`.
