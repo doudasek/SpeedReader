@@ -33,8 +33,6 @@
     <string name="feature_speedtest_error_offline_text">Check your Wi-Fi or mobile data and try again.</string>
     <string name="feature_speedtest_error_no_servers_title">No servers available</string>
     <string name="feature_speedtest_error_no_servers_text">The server list came back empty. Try again later.</string>
-    <string name="feature_speedtest_error_no_server_reachable_title">No server answered</string>
-    <string name="feature_speedtest_error_no_server_reachable_text">None of the nearby servers responded to ping. Try again in a moment.</string>
     <string name="feature_speedtest_error_connection_lost_title">The test was interrupted</string>
     <string name="feature_speedtest_error_connection_lost_text">The connection dropped while measuring.</string>
     <string name="feature_speedtest_error_unexpected_title">Something went wrong</string>

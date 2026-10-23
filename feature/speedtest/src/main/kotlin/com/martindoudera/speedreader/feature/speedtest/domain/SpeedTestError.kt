@@ -15,8 +15,6 @@ sealed interface SpeedTestError {
 
     data object ServerUnreachable : SpeedTestError
 
-    data object NoServerReachable : SpeedTestError
-
     data object MeasurementFailed : SpeedTestError
 
     data class Unknown(val cause: Throwable?) : SpeedTestError

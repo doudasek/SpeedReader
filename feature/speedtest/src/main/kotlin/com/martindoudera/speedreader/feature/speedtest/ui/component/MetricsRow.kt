@@ -45,7 +45,7 @@ internal fun MetricsRow(phase: SpeedTestPhase, modifier: Modifier = Modifier) {
             unit = stringResource(R.string.feature_speedtest_unit_ms),
             accent = colors.highlight,
             modifier = cardModifier.weight(1f),
-            caption = server?.let { stringResource(R.string.feature_speedtest_caption_icmp) },
+            caption = server?.latency?.let { stringResource(R.string.feature_speedtest_caption_icmp) },
             emphasized = finished,
         )
         SrMetricCard(

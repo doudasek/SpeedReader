@@ -92,14 +92,18 @@ class RunSpeedTestUseCase @Inject constructor(
             return@coroutineScope Outcome.Failure(SpeedTestError.NoServersAvailable)
         }
 
-        val fastest = selectClosestServers(servers, location.await())
+        val candidates = selectClosestServers(servers, location.await())
+        val selected = candidates
             .map { candidate -> async { candidate to latencyRepository.measureLatency(candidate).valueOrNull() } }
             .awaitAll()
             .mapNotNull { (candidate, latency) -> latency?.let { candidate to it } }
             .minByOrNull { (_, latency) -> latency }
-            ?: return@coroutineScope Outcome.Failure(SpeedTestError.NoServerReachable)
-        Timber.d("Selected %s (%s), latency %s", fastest.first.url.value, fastest.first.provider, fastest.second)
-        Outcome.Success(SelectedServer(fastest.first, fastest.second))
+            ?.let { (server, latency) -> SelectedServer(server, latency) }
+            ?: SelectedServer(candidates.first(), latency = null).also {
+                Timber.w("No server answered ICMP, falling back to the closest one")
+            }
+        Timber.d("Selected %s (%s), latency %s", selected.server.url.value, selected.server.provider, selected.latency)
+        Outcome.Success(selected)
     }
 
     private suspend fun FlowCollector<SpeedTestProgress>.measure(

@@ -226,7 +226,7 @@ private fun shareText(result: SpeedTestPhase.Finished): String {
         R.string.feature_speedtest_share_text,
         result.downloadSpeed.formatMegabits(),
         result.uploadSpeed.formatMegabits(),
-        server.latency.formatMilliseconds(),
+        server.latency?.formatMilliseconds() ?: NO_VALUE,
         listOfNotNull(server.name, server.location).joinToString(", "),
     )
 }
@@ -240,7 +240,6 @@ private fun Context.shareText(text: String) {
 private fun FailureReason.titleRes(): Int = when (this) {
     FailureReason.Offline -> R.string.feature_speedtest_error_offline_title
     FailureReason.NoServersAvailable -> R.string.feature_speedtest_error_no_servers_title
-    FailureReason.NoServerReachable -> R.string.feature_speedtest_error_no_server_reachable_title
     FailureReason.ConnectionLost -> R.string.feature_speedtest_error_connection_lost_title
     FailureReason.Unexpected -> R.string.feature_speedtest_error_unexpected_title
 }
@@ -248,7 +247,6 @@ private fun FailureReason.titleRes(): Int = when (this) {
 private fun FailureReason.textRes(): Int = when (this) {
     FailureReason.Offline -> R.string.feature_speedtest_error_offline_text
     FailureReason.NoServersAvailable -> R.string.feature_speedtest_error_no_servers_text
-    FailureReason.NoServerReachable -> R.string.feature_speedtest_error_no_server_reachable_text
     FailureReason.ConnectionLost -> R.string.feature_speedtest_error_connection_lost_text
     FailureReason.Unexpected -> R.string.feature_speedtest_error_unexpected_text
 }

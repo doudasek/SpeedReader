@@ -205,13 +205,14 @@ class SpeedTestViewModelTest {
     }
 
     @Test
-    fun explainsUnansweredPingsAsNoServerReachable() {
+    fun showsNoLatencyWhenNoServerAnswersPing() {
         latencyRepository.latencies = emptyMap()
         val viewModel = createViewModel()
 
         viewModel.onStartClick()
 
-        assertEquals(SpeedTestPhase.Failed(FailureReason.NoServerReachable), viewModel.uiState.value.phase)
+        val finished = assertIs<SpeedTestPhase.Finished>(viewModel.uiState.value.phase)
+        assertEquals(ServerUiModel(name = "CETIN a.s.", location = "Prague, CZ", latency = null), finished.server)
     }
 
     @Test
