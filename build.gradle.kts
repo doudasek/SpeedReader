@@ -9,6 +9,29 @@ plugins {
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.screenshot) apply false
     alias(libs.plugins.spotless)
+    alias(libs.plugins.kover)
+    id("speedreader.kover")
+}
+
+dependencies {
+    kover(project(":app"))
+    kover(project(":core:common"))
+    kover(project(":core:designsystem"))
+    kover(project(":core:network"))
+    kover(project(":feature:speedtest"))
+}
+
+// Merges the debug unit test coverage of every module: `./gradlew :koverXmlReportCoverage :koverVerifyCoverage`.
+kover {
+    reports {
+        variant("coverage") {
+            verify {
+                rule {
+                    minBound(80)
+                }
+            }
+        }
+    }
 }
 
 // Globs are recursive, so every module is covered without applying the plugin per project.
