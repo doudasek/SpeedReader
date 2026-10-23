@@ -2,6 +2,7 @@
 <resources>
     <string name="feature_speedtest_title" translatable="false">SpeedReader</string>
     <string name="feature_speedtest_version" translatable="false">v%1$s</string>
+    <string name="feature_speedtest_author" translatable="false">Martin Douděra</string>
     <string name="feature_speedtest_start">Start</string>
     <string name="feature_speedtest_single_connection_title">Single connection only</string>
     <string name="feature_speedtest_single_connection_description">Measure one transfer instead of %1$d in parallel</string>
