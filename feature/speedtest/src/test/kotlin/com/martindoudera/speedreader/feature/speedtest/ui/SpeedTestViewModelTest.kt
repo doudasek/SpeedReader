@@ -1,6 +1,7 @@
 package com.martindoudera.speedreader.feature.speedtest.ui
 
 import androidx.lifecycle.SavedStateHandle
+import app.cash.turbine.test
 import com.martindoudera.speedreader.core.common.domain.model.AppVersion
 import com.martindoudera.speedreader.core.common.error.NetworkError
 import com.martindoudera.speedreader.core.common.error.Outcome
@@ -12,6 +13,7 @@ import com.martindoudera.speedreader.feature.speedtest.domain.usecase.RunSpeedTe
 import com.martindoudera.speedreader.feature.speedtest.domain.usecase.SelectClosestServersUseCase
 import com.martindoudera.speedreader.feature.speedtest.testing.MainDispatcherRule
 import com.martindoudera.speedreader.feature.speedtest.testing.data.geoPoint
+import com.martindoudera.speedreader.feature.speedtest.testing.data.pacedTransfer
 import com.martindoudera.speedreader.feature.speedtest.testing.data.steadyTransfer
 import com.martindoudera.speedreader.feature.speedtest.testing.data.transferSample
 import com.martindoudera.speedreader.feature.speedtest.testing.repository.FakeLatencyRepository
@@ -22,7 +24,11 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -142,14 +148,42 @@ class SpeedTestViewModelTest {
     }
 
     @Test
-    fun stopReturnsToIdle() {
-        throughputRepository.downloadSamples = flow { awaitCancellation() }
+    fun goesThroughEveryPhaseOfARunInOrder() = runTest {
+        throughputRepository.downloadSamples = pacedTransfer(bytesPerTick = 2_500_000, until = PHASE_DURATION)
+        throughputRepository.uploadSamples = pacedTransfer(bytesPerTick = 250_000, until = PHASE_DURATION)
+        val viewModel = createViewModel()
+
+        viewModel.uiState.phases().test {
+            viewModel.onStartClick()
+
+            assertEquals(
+                listOf(
+                    SpeedTestPhase.Idle::class,
+                    SpeedTestPhase.FindingServer::class,
+                    SpeedTestPhase.Downloading::class,
+                    SpeedTestPhase.Uploading::class,
+                    SpeedTestPhase.Finished::class,
+                ),
+                List(5) { awaitItem() },
+            )
+        }
+    }
+
+    @Test
+    fun stopReturnsToIdleAndNothingFollows() = runTest {
+        throughputRepository.downloadSamples = flow {
+            emit(transferSample(tick = 1, totalBytes = 1_000))
+            awaitCancellation()
+        }
         val viewModel = createViewModel()
         viewModel.onStartClick()
 
-        viewModel.onStopClick()
+        viewModel.uiState.phases().test {
+            viewModel.onStopClick()
 
-        assertEquals(SpeedTestPhase.Idle, viewModel.uiState.value.phase)
+            assertEquals(listOf(SpeedTestPhase.Downloading::class, SpeedTestPhase.Idle::class), List(2) { awaitItem() })
+            expectNoEvents()
+        }
     }
 
     @Test
@@ -249,6 +283,9 @@ class SpeedTestViewModelTest {
 
         assertEquals(SpeedTestPhase.FindingServer, viewModel.uiState.value.phase)
     }
+
+    /** The phase types the screen passes through; the measuring phases repeat with every sample. */
+    private fun StateFlow<SpeedTestUiState>.phases() = map { it.phase::class }.distinctUntilChanged()
 
     private fun createViewModel(savedState: SavedStateHandle = SavedStateHandle()) = SpeedTestViewModel(
         RunSpeedTestUseCase(
