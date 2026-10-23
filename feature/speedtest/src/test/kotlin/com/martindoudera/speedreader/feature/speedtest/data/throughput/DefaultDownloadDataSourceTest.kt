@@ -7,6 +7,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
@@ -83,5 +84,21 @@ class DefaultDownloadDataSourceTest {
         }
 
         assertTrue(received.get() < 10_000_000)
+    }
+
+    @Test
+    fun cancelledCallerSendsNoRequest() = runTest {
+        server.enqueue(MockResponse.Builder().body(Buffer().write(ByteArray(2_048))).throttleBody(1_024, 1, TimeUnit.SECONDS).build())
+        val received = AtomicLong()
+
+        withContext(Dispatchers.IO) {
+            launch {
+                cancel()
+                dataSource.download(server.serverUrl()) { received.addAndGet(it) }
+            }.join()
+        }
+
+        assertEquals(0, server.requestCount)
+        assertEquals(0, received.get())
     }
 }
