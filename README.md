@@ -178,3 +178,17 @@ is a one-constant change.
 - **Richer UI.** A gauge or live throughput graph, details of each candidate server with its RTT,
   jitter, and a history of past runs. Foldable postures (tabletop, book) are handled only through
   the window size, not through `FoldingFeature`.
+
+## Screenshots
+
+Phone: start, measuring, result.
+
+<p>
+  <img src="docs/screenshots/start.png" width="32%" alt="Start screen">
+  <img src="docs/screenshots/download.png" width="32%" alt="Download in progress">
+  <img src="docs/screenshots/result.png" width="32%" alt="Finished test with results">
+</p>
+
+Tablet, result:
+
+<img src="docs/screenshots/tablet-result.png" width="100%" alt="Finished test on a tablet, two-pane layout">
