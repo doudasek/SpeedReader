@@ -50,7 +50,7 @@ internal val SpeedTestPhase.server: ServerUiModel?
     }
 
 /** The selected server as the screen labels it; `location` is null when the directory names no city or country. */
-data class ServerUiModel(val name: String, val location: String?, val latency: Duration)
+data class ServerUiModel(val name: String, val location: String?, val latency: Duration?)
 
 /** Why a run failed, at the granularity the screen explains it to the user. */
-enum class FailureReason { Offline, NoServersAvailable, NoServerReachable, ConnectionLost, Unexpected }
+enum class FailureReason { Offline, NoServersAvailable, ConnectionLost, Unexpected }

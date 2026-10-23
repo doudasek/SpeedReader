@@ -30,7 +30,6 @@ private fun SpeedTestError.toFailureReason(): FailureReason = when (this) {
         else -> FailureReason.Unexpected
     }
     SpeedTestError.NoServersAvailable -> FailureReason.NoServersAvailable
-    SpeedTestError.ServerUnreachable, SpeedTestError.NoServerReachable -> FailureReason.NoServerReachable
     SpeedTestError.MeasurementFailed -> FailureReason.ConnectionLost
-    is SpeedTestError.Unknown -> FailureReason.Unexpected
+    SpeedTestError.ServerUnreachable, is SpeedTestError.Unknown -> FailureReason.Unexpected
 }

@@ -33,8 +33,6 @@
     <string name="feature_speedtest_error_offline_text">Zkontrolujte Wi-Fi nebo mobilní data a zkuste to znovu.</string>
     <string name="feature_speedtest_error_no_servers_title">Žádné servery nejsou k dispozici</string>
     <string name="feature_speedtest_error_no_servers_text">Seznam serverů je prázdný. Zkuste to později.</string>
-    <string name="feature_speedtest_error_no_server_reachable_title">Žádný server neodpověděl</string>
-    <string name="feature_speedtest_error_no_server_reachable_text">Žádný z blízkých serverů neodpověděl na ping. Zkuste to za chvíli znovu.</string>
     <string name="feature_speedtest_error_connection_lost_title">Test byl přerušen</string>
     <string name="feature_speedtest_error_connection_lost_text">Během měření se přerušilo spojení.</string>
     <string name="feature_speedtest_error_unexpected_title">Něco se pokazilo</string>

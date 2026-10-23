@@ -20,6 +20,7 @@ import com.martindoudera.speedreader.feature.speedtest.testing.repository.FakeSe
 import com.martindoudera.speedreader.feature.speedtest.testing.repository.FakeThroughputRepository
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -165,12 +166,14 @@ class RunSpeedTestUseCaseTest {
     }
 
     @Test
-    fun failsWhenNoServerAnswers() = runTest {
+    fun usesTheClosestServerWithoutLatencyWhenNoServerAnswers() = runTest {
         latencyRepository.latencies = emptyMap()
 
         val states = runSpeedTest(ConnectionMode.Parallel).toList()
 
-        assertEquals(listOf(FindingServer, Failed(SpeedTestError.NoServerReachable)), states)
+        val finished = assertIs<Finished>(states.last())
+        assertEquals(NEAR, finished.server.server)
+        assertNull(finished.server.latency)
     }
 
     @Test

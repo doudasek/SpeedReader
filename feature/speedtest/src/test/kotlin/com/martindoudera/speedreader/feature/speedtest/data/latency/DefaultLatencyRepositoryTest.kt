@@ -22,10 +22,11 @@ class DefaultLatencyRepositoryTest {
     private val repository = DefaultLatencyRepository(pingDataSource, dns, dispatcher)
     private val server = testServer("https://breclav.wifiman.me:81", 48.7569, 16.8854)
     private val address = InetAddress.getByName("192.0.2.10")
+    private val ipv6Address = InetAddress.getByName("2001:db8::10")
 
     @Before
     fun setUp() {
-        dns.addresses = mapOf("breclav.wifiman.me" to address)
+        dns.addresses = mapOf("breclav.wifiman.me" to listOf(address))
     }
 
     @Test
@@ -38,13 +39,22 @@ class DefaultLatencyRepositoryTest {
     }
 
     @Test
-    fun firstLostProbeEndsProbingAndEarlierAnswersCount() = runTest(dispatcher) {
-        pingDataSource.roundTrips = listOf(30.milliseconds, null, 10.milliseconds)
+    fun oneLostProbeDoesNotEndProbing() = runTest(dispatcher) {
+        pingDataSource.roundTrips = listOf(null, 30.milliseconds, 10.milliseconds)
+
+        val outcome = repository.measureLatency(server)
+
+        assertEquals(Outcome.Success(10.milliseconds), outcome)
+        assertEquals(PING_PROBES, pingDataSource.pinged.size)
+    }
+
+    @Test
+    fun answersBeforeTwoLostProbesInARowCount() = runTest(dispatcher) {
+        pingDataSource.roundTrips = listOf(30.milliseconds, null, null)
 
         val outcome = repository.measureLatency(server)
 
         assertEquals(Outcome.Success(30.milliseconds), outcome)
-        assertEquals(2, pingDataSource.pinged.size)
     }
 
     @Test
@@ -58,13 +68,44 @@ class DefaultLatencyRepositoryTest {
     }
 
     @Test
-    fun silentServerIsUnreachableAfterASingleProbe() = runTest(dispatcher) {
+    fun silentServerIsUnreachableAfterTwoLostProbesInARow() = runTest(dispatcher) {
         pingDataSource.roundTrips = emptyList()
 
         val outcome = repository.measureLatency(server)
 
         assertEquals(Outcome.Failure(SpeedTestError.ServerUnreachable), outcome)
-        assertEquals(1, pingDataSource.pinged.size)
+        assertEquals(LOST_PROBES_IN_A_ROW, pingDataSource.pinged.size)
+    }
+
+    @Test
+    fun silentAddressFallsBackToTheOtherFamily() = runTest(dispatcher) {
+        dns.addresses = mapOf("breclav.wifiman.me" to listOf(ipv6Address, address))
+        pingDataSource.roundTrips = listOf(null, null, 20.milliseconds, 25.milliseconds, 22.milliseconds)
+
+        val outcome = repository.measureLatency(server)
+
+        assertEquals(Outcome.Success(20.milliseconds), outcome)
+        assertEquals(listOf(ipv6Address, ipv6Address, address, address, address), pingDataSource.pinged)
+    }
+
+    @Test
+    fun answeringAddressIsTheOnlyOnePinged() = runTest(dispatcher) {
+        dns.addresses = mapOf("breclav.wifiman.me" to listOf(ipv6Address, address))
+        pingDataSource.roundTrips = List(PING_PROBES) { 20.milliseconds }
+
+        repository.measureLatency(server)
+
+        assertEquals(List(PING_PROBES) { ipv6Address }, pingDataSource.pinged)
+    }
+
+    @Test
+    fun onlyTheFirstAddressOfEachFamilyIsPinged() = runTest(dispatcher) {
+        dns.addresses = mapOf("breclav.wifiman.me" to listOf(address, InetAddress.getByName("192.0.2.11")))
+
+        val outcome = repository.measureLatency(server)
+
+        assertEquals(Outcome.Failure(SpeedTestError.ServerUnreachable), outcome)
+        assertEquals(listOf(address, address), pingDataSource.pinged)
     }
 
     @Test
