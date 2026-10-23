@@ -2,6 +2,7 @@ package com.martindoudera.speedreader.feature.speedtest.data.throughput
 
 import java.io.IOException
 import kotlin.random.Random
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
@@ -14,10 +15,14 @@ import retrofit2.Response
  * cancelled. Cancelling the call aborts a read or write that is blocked on the socket, which
  * coroutine cancellation alone cannot do. The `IOException` that abort causes is reported as the
  * cancellation it is, not as a failure.
+ *
+ * The canceller starts undispatched, so it is waiting before the call blocks: a coroutine cancelled
+ * while still queued never runs, and its `finally` would never cancel the call. A caller that is
+ * already cancelled thus cancels the call before it is sent.
  */
 internal suspend fun <T, R> Call<T>.executeCancellably(block: (Response<T>) -> R): R = coroutineScope {
     val call = this@executeCancellably
-    val canceller = launch {
+    val canceller = launch(start = CoroutineStart.UNDISPATCHED) {
         try {
             awaitCancellation()
         } finally {
