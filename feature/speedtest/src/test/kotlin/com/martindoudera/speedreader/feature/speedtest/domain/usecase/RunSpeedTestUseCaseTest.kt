@@ -1,5 +1,6 @@
 package com.martindoudera.speedreader.feature.speedtest.domain.usecase
 
+import app.cash.turbine.test
 import com.martindoudera.speedreader.core.common.error.HttpStatusCode
 import com.martindoudera.speedreader.core.common.error.NetworkError
 import com.martindoudera.speedreader.core.common.error.Outcome
@@ -28,7 +29,6 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -226,12 +226,13 @@ class RunSpeedTestUseCaseTest {
     }
 
     @Test
-    fun stoppingTheRunIsNotReportedAsAFailure() = runTest {
+    fun waitingForTheFirstSampleNeitherFailsNorEnds() = runTest {
         throughputRepository.downloadSamples = flow { awaitCancellation() }
 
-        val states = runSpeedTest(ConnectionMode.Parallel).take(1).toList()
-
-        assertEquals(listOf(FindingServer), states)
+        runSpeedTest(ConnectionMode.Parallel).test {
+            assertEquals(FindingServer, awaitItem())
+            expectNoEvents()
+        }
     }
 
     @Test

@@ -11,8 +11,10 @@ import com.martindoudera.speedreader.feature.speedtest.domain.model.SpeedTestSer
 import com.martindoudera.speedreader.feature.speedtest.domain.model.TransferSample
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.json.Json
 import okhttp3.ResponseBody.Companion.toResponseBody
 import retrofit2.HttpException
@@ -33,6 +35,10 @@ fun steadyTransfer(bytesPerTick: Long, until: Duration): Flow<NetworkOutcome<Tra
     val ticks = (until / SAMPLE_INTERVAL).toInt()
     return (1..ticks).map { tick -> transferSample(tick, bytesPerTick * tick) }.asFlow()
 }
+
+/** [steadyTransfer] paced in virtual time, one sample every [SAMPLE_INTERVAL], as the real repository reports them. */
+fun pacedTransfer(bytesPerTick: Long, until: Duration): Flow<NetworkOutcome<TransferSample>> =
+    steadyTransfer(bytesPerTick, until).onEach { delay(SAMPLE_INTERVAL) }
 
 val testJson = Json { ignoreUnknownKeys = true }
 

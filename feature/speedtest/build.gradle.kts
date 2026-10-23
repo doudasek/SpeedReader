@@ -22,5 +22,7 @@ dependencies {
     implementation(libs.timber)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockk)
     testImplementation(libs.okhttp.mockwebserver3)
+    testImplementation(libs.turbine)
 }
