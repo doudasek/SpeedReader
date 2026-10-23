@@ -6,6 +6,7 @@ group = "com.martindoudera.speedreader.buildlogic"
 
 dependencies {
     compileOnly(libs.android.gradlePlugin)
+    compileOnly(libs.kover.gradlePlugin)
 }
 
 gradlePlugin {
@@ -25,6 +26,10 @@ gradlePlugin {
         register("hilt") {
             id = "speedreader.hilt"
             implementationClass = "HiltConventionPlugin"
+        }
+        register("kover") {
+            id = "speedreader.kover"
+            implementationClass = "KoverConventionPlugin"
         }
         register("androidScreenshot") {
             id = "speedreader.android.screenshot"

@@ -45,10 +45,6 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    # JaCoCo instruction coverage; measured at 70.7 % overall when the gate was introduced.
-    env:
-      MIN_COVERAGE_OVERALL: 65
-      MIN_COVERAGE_CHANGED_FILES: 75
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
@@ -56,42 +52,26 @@ jobs:
           distribution: temurin
           java-version: 25
       - uses: gradle/actions/setup-gradle@v5
-      - run: ./gradlew testDebugUnitTest jacocoDebugReport
+      - run: ./gradlew :koverXmlReportCoverage :koverHtmlReportCoverage
       - if: failure()
         uses: actions/upload-artifact@v5
         with:
           name: unit-test-reports
           path: "**/build/reports/tests/testDebugUnitTest/"
-      - id: jacoco
-        uses: madrapps/jacoco-report@v1.8.0
+      # Only comments on the PR; the threshold itself is enforced by koverVerifyCoverage in build.gradle.kts.
+      - uses: mi-kas/kover-report@v2.7
         with:
-          paths: ${{ github.workspace }}/**/build/reports/jacoco/**/jacocoDebugReport.xml
+          path: ${{ github.workspace }}/build/reports/kover/reportCoverage.xml
           title: Code coverage
           update-comment: true
-          comment-type: both
-          min-coverage-overall: ${{ env.MIN_COVERAGE_OVERALL }}
-          min-coverage-changed-files: ${{ env.MIN_COVERAGE_CHANGED_FILES }}
-      - name: Check coverage thresholds
-        env:
-          COVERAGE_OVERALL: ${{ steps.jacoco.outputs.coverage-overall }}
-          COVERAGE_CHANGED_FILES: ${{ steps.jacoco.outputs.coverage-changed-files }}
-        run: |
-          below() { awk -v value="$1" -v min="$2" 'BEGIN { exit !(value == "" || value + 0 < min + 0) }'; }
-          failed=0
-          if below "$COVERAGE_OVERALL" "$MIN_COVERAGE_OVERALL"; then
-            echo "::error::Overall coverage ${COVERAGE_OVERALL:-unknown} % is below $MIN_COVERAGE_OVERALL %."
-            failed=1
-          fi
-          if below "$COVERAGE_CHANGED_FILES" "$MIN_COVERAGE_CHANGED_FILES"; then
-            echo "::error::Coverage of the changed files ${COVERAGE_CHANGED_FILES:-unknown} % is below $MIN_COVERAGE_CHANGED_FILES %."
-            failed=1
-          fi
-          exit $failed
+          min-coverage-overall: 80
+          coverage-counter-type: LINE
+      - run: ./gradlew :koverVerifyCoverage
       - if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v5
         with:
           name: coverage-reports
-          path: "**/build/reports/jacoco/"
+          path: build/reports/kover/
 
   # Reference images are recorded on macOS; layoutlib font rendering differs on Linux.
   screenshot-tests:
