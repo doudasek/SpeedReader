@@ -74,13 +74,14 @@ class DefaultTokenDataSourceTest {
     }
 
     @Test
-    fun clearedTokenIsReplacedByAFreshOne() {
-        enqueueTokens("first", "second")
+    fun tokenWithATtlShorterThanTheMarginIsStillReused() {
+        enqueueTokens("first", "second", ttl = 10)
         dataSource.token()
+        timeSource += 4.seconds
 
-        dataSource.clear()
+        val token = dataSource.token()
 
-        assertEquals(DirectoryToken("second"), dataSource.token())
+        assertEquals(DirectoryToken("first"), token)
     }
 
     @Test
@@ -97,7 +98,7 @@ class DefaultTokenDataSourceTest {
     fun invalidatingAnOlderTokenKeepsTheCurrentOne() {
         enqueueTokens("first", "second", "third")
         val stale = dataSource.token()
-        dataSource.clear()
+        dataSource.invalidate(stale)
         dataSource.token()
 
         dataSource.invalidate(stale)
@@ -123,7 +124,7 @@ class DefaultTokenDataSourceTest {
 
     @Test
     fun concurrentCallersShareOneRequest() {
-        server.enqueue(MockResponse.Builder().body(tokenJson("shared")).headersDelay(200, TimeUnit.MILLISECONDS).build())
+        server.enqueue(MockResponse.Builder().body(tokenJson("shared", ttl = 80)).headersDelay(200, TimeUnit.MILLISECONDS).build())
         enqueueTokens("second", "third", "fourth", "fifth", "sixth")
         val executor = Executors.newFixedThreadPool(6)
 
@@ -134,7 +135,8 @@ class DefaultTokenDataSourceTest {
         assertEquals(1, server.requestCount)
     }
 
-    private fun enqueueTokens(vararg tokens: String) = tokens.forEach { server.enqueue(MockResponse(body = tokenJson(it))) }
+    private fun enqueueTokens(vararg tokens: String, ttl: Int = 80) =
+        tokens.forEach { server.enqueue(MockResponse(body = tokenJson(it, ttl))) }
 
-    private fun tokenJson(token: String) = """{"token":"$token","ttl":80}"""
+    private fun tokenJson(token: String, ttl: Int) = """{"token":"$token","ttl":$ttl}"""
 }

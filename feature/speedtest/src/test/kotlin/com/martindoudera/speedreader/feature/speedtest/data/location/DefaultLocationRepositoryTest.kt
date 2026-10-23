@@ -45,6 +45,15 @@ class DefaultLocationRepositoryTest {
     }
 
     @Test
+    fun zeroCoordinatesAreAnUnlocatedIpRatherThanALocation() = runTest {
+        api.clientLocation = IpLocationDto(lat = 0.0, lon = 0.0)
+
+        val outcome = repository.currentLocation()
+
+        assertIs<NetworkError.Malformed>(outcome.error())
+    }
+
+    @Test
     fun unreachableDirectoryIsNoConnection() = runTest {
         api.clientLocationFailure = UnknownHostException("sp-dir.uwn.com")
 

@@ -46,7 +46,7 @@ internal class DefaultUploadDataSource @Inject constructor(private val api: Meas
     private suspend fun send(server: ServerUrl, size: Long): Long =
         api.upload(server.endpoint("upload"), cacheBuster(), UploadBody(size)).executeCancellably { response ->
             if (!response.isSuccessful) {
-                response.body()?.close()
+                response.errorBody()?.close()
                 throw HttpException(response)
             }
             val answer = response.body()?.use { it.string() }

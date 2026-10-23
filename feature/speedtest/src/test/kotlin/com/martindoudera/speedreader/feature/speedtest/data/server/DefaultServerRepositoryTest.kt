@@ -11,7 +11,6 @@ import com.martindoudera.speedreader.feature.speedtest.domain.model.SpeedTestSer
 import com.martindoudera.speedreader.feature.speedtest.testing.data.httpError
 import com.martindoudera.speedreader.feature.speedtest.testing.data.testJson
 import com.martindoudera.speedreader.feature.speedtest.testing.directory.FakeSpeedTestDirectoryApi
-import com.martindoudera.speedreader.feature.speedtest.testing.directory.FakeTokenDataSource
 import java.net.UnknownHostException
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -20,8 +19,7 @@ import org.junit.Test
 
 class DefaultServerRepositoryTest {
     private val api = FakeSpeedTestDirectoryApi()
-    private val tokenDataSource = FakeTokenDataSource()
-    private val repository = DefaultServerRepository(api, tokenDataSource, testJson)
+    private val repository = DefaultServerRepository(api, testJson)
 
     @Test
     fun serverIsMappedToTheDomainModel() = runTest {
@@ -75,15 +73,6 @@ class DefaultServerRepositoryTest {
         val outcome = repository.servers()
 
         assertEquals(Outcome.Success(emptyList()), outcome)
-    }
-
-    @Test
-    fun everyLoadStartsWithAFreshToken() = runTest {
-        repository.servers()
-
-        repository.servers()
-
-        assertEquals(2, tokenDataSource.clears)
     }
 
     @Test

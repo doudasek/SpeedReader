@@ -6,11 +6,7 @@ import com.martindoudera.speedreader.core.common.error.NetworkOutcome
 import com.martindoudera.speedreader.core.common.error.Outcome
 import java.io.IOException
 import java.io.InterruptedIOException
-import java.net.ConnectException
-import java.net.NoRouteToHostException
-import java.net.PortUnreachableException
 import java.net.SocketTimeoutException
-import java.net.UnknownHostException
 import javax.net.ssl.SSLException
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.SerializationException
@@ -30,7 +26,6 @@ private fun Throwable.toNetworkError(): NetworkError = when (this) {
     is SSLException -> NetworkError.Tls(this)
     is SocketTimeoutException -> NetworkError.Timeout(this)
     is InterruptedIOException -> NetworkError.Timeout(this)
-    is UnknownHostException, is ConnectException, is NoRouteToHostException, is PortUnreachableException, is IOException ->
-        NetworkError.NoConnection(this)
+    is IOException -> NetworkError.NoConnection(this)
     else -> NetworkError.Unknown(this)
 }

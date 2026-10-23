@@ -51,7 +51,7 @@ internal fun MetricsRow(phase: SpeedTestPhase, modifier: Modifier = Modifier) {
         SrMetricCard(
             icon = Icons.Rounded.Download,
             label = stringResource(R.string.feature_speedtest_download),
-            value = download.speed?.formatMegabits() ?: NO_VALUE,
+            value = download.speed?.formatMegabits(SpeedReaderTheme.locale) ?: NO_VALUE,
             unit = stringResource(R.string.feature_speedtest_unit_mbps),
             accent = colors.download,
             modifier = cardModifier.weight(1f),
@@ -62,7 +62,7 @@ internal fun MetricsRow(phase: SpeedTestPhase, modifier: Modifier = Modifier) {
         SrMetricCard(
             icon = Icons.Rounded.Upload,
             label = stringResource(R.string.feature_speedtest_upload),
-            value = upload.speed?.formatMegabits() ?: NO_VALUE,
+            value = upload.speed?.formatMegabits(SpeedReaderTheme.locale) ?: NO_VALUE,
             unit = stringResource(R.string.feature_speedtest_unit_mbps),
             accent = colors.upload,
             modifier = cardModifier.weight(1f),

@@ -17,7 +17,10 @@ import timber.log.Timber
  */
 internal val TOKEN_RENEWAL_MARGIN = 15.seconds
 
-/** Caches the token and renews it [TOKEN_RENEWAL_MARGIN] before its TTL runs out. Concurrent callers share one request. */
+/**
+ * Caches the token and renews it [TOKEN_RENEWAL_MARGIN] before its TTL runs out, or halfway through
+ * a TTL too short for that margin. Concurrent callers share one request.
+ */
 @Singleton
 internal class DefaultTokenDataSource @Inject constructor(private val api: DirectoryTokenApi, private val timeSource: TimeSource) :
     TokenDataSource {
@@ -35,12 +38,6 @@ internal class DefaultTokenDataSource @Inject constructor(private val api: Direc
         if (cached?.token == token) cached = null
     }
 
-    @Synchronized
-    override fun clear() {
-        Timber.d("Dropping the cached directory token")
-        cached = null
-    }
-
     private fun issue(): CachedToken {
         Timber.d("Requesting a directory token")
         val response = try {
@@ -51,7 +48,8 @@ internal class DefaultTokenDataSource @Inject constructor(private val api: Direc
         if (!response.isSuccessful) throw HttpException(response)
         val body = response.body() ?: throw IOException("Empty directory token response")
         Timber.d("Directory token issued, valid for %d s", body.ttl)
-        return CachedToken(DirectoryToken(body.token), timeSource.markNow() + body.ttl.seconds - TOKEN_RENEWAL_MARGIN)
+        val ttl = body.ttl.seconds
+        return CachedToken(DirectoryToken(body.token), timeSource.markNow() + ttl - minOf(TOKEN_RENEWAL_MARGIN, ttl / 2))
     }
 
     private class CachedToken(val token: DirectoryToken, val renewAt: TimeMark)

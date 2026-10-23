@@ -8,6 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import java.util.Locale
 
 private val LightColorScheme = lightColorScheme(
     primary = Indigo50,
@@ -104,4 +106,9 @@ object SpeedReaderTheme {
     val dimens: Dimens
         @Composable @ReadOnlyComposable
         get() = LocalDimens.current
+
+    /** The locale the UI is shown in; numbers and dates must be formatted in it, not in the JVM default. */
+    val locale: Locale
+        @Composable @ReadOnlyComposable
+        get() = LocalConfiguration.current.locales[0]
 }
