@@ -11,6 +11,7 @@ import com.martindoudera.speedreader.feature.speedtest.domain.model.ByteCount
 import com.martindoudera.speedreader.feature.speedtest.domain.model.SpeedTestServer
 import com.martindoudera.speedreader.feature.speedtest.domain.model.TransferSample
 import com.martindoudera.speedreader.feature.speedtest.domain.repository.ThroughputRepository
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 import javax.inject.Inject
@@ -31,8 +32,9 @@ internal val TRANSFER_SAMPLE_INTERVAL = 250.milliseconds
  * Runs `connections` parallel streams against one server, all adding into one byte counter, and
  * reports the counter every [TRANSFER_SAMPLE_INTERVAL] until the collector stops.
  *
- * A stream whose request ends is restarted. A stream that fails ends the whole transfer: the
- * failure is emitted as the last element and the other streams are cancelled. Elapsed time runs
+ * A stream whose request ends is restarted. A stream that fails stops, and the others carry on, so
+ * one dropped connection costs only its share of the speed. Only when every stream has failed is
+ * the last failure emitted as the final element. Elapsed time runs
  * from the moment the streams start, so connection setup counts, as it does for the user.
  */
 internal class DefaultThroughputRepository @Inject constructor(
@@ -53,11 +55,12 @@ internal class DefaultThroughputRepository @Inject constructor(
         request: suspend (onBytes: (Long) -> Unit) -> Unit,
     ): Flow<NetworkOutcome<TransferSample>> = channelFlow {
         val transferred = AtomicLong()
+        val failed = AtomicInteger()
         val failure = AtomicReference<NetworkError?>()
         val startedAt = timeSource.markNow()
         Timber.d("%s started on %d connections", direction, connections)
 
-        val streams = List(connections) { stream ->
+        repeat(connections) { stream ->
             launch {
                 safeApiCall {
                     while (true) {
@@ -65,7 +68,11 @@ internal class DefaultThroughputRepository @Inject constructor(
                         Timber.v("%s stream %d: request ended, starting another", direction, stream)
                     }
                 }.onFailure { error ->
-                    if (failure.compareAndSet(null, error)) Timber.e("%s stream %d failed: %s", direction, stream, error)
+                    Timber.w("%s stream %d failed: %s", direction, stream, error)
+                    if (failed.incrementAndGet() == connections) {
+                        Timber.e("%s failed on every stream", direction)
+                        failure.set(error)
+                    }
                 }
             }
         }
@@ -74,7 +81,6 @@ internal class DefaultThroughputRepository @Inject constructor(
                 delay(TRANSFER_SAMPLE_INTERVAL)
                 send(Outcome.Success(TransferSample(startedAt.elapsedNow(), ByteCount(transferred.get()))))
             }
-            streams.forEach { it.cancel() }
             send(Outcome.Failure(checkNotNull(failure.get())))
         } finally {
             Timber.d("%s ended after %s, %d bytes", direction, startedAt.elapsedNow(), transferred.get())

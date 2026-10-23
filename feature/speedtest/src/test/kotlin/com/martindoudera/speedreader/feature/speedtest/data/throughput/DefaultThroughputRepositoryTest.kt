@@ -58,7 +58,18 @@ class DefaultThroughputRepositoryTest {
     }
 
     @Test
-    fun failingStreamEndsTheTransferWithItsError() = runTest(dispatcher) {
+    fun oneFailingStreamLeavesTheOthersRunning() = runTest(dispatcher) {
+        downloads.failure = httpError(503)
+        downloads.failAfter = 300.milliseconds
+        downloads.failingRequests = 1
+
+        val samples = repository.download(server, connections = 2).take(3).toList()
+
+        assertEquals(listOf(sample(250, 12_000), sample(500, 19_000), sample(750, 25_000)), samples)
+    }
+
+    @Test
+    fun transferFailsOnlyWhenEveryStreamHasFailed() = runTest(dispatcher) {
         downloads.failure = httpError(503)
         downloads.failAfter = 300.milliseconds
 
