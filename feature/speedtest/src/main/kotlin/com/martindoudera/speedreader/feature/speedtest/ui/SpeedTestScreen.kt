@@ -116,7 +116,7 @@ internal fun SpeedTestContent(
                 .padding(bottom = spacing.xl),
         ) {
             SrTopBar(title = stringResource(R.string.feature_speedtest_title)) {
-                VersionLabel(uiState.appVersion, visible = phase is SpeedTestPhase.Idle)
+                AppInfoLabel(uiState.appVersion, visible = phase is SpeedTestPhase.Idle)
             }
             if (twoPane) {
                 Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(spacing.xxl)) {
@@ -201,16 +201,22 @@ private fun ServerChip(uiState: SpeedTestUiState, modifier: Modifier = Modifier)
     }
 }
 
-/** The app version in the top bar's corner, shown on the start screen only. */
+/** The app author and version in the top bar's corner, shown on the start screen only. */
 @Composable
-private fun VersionLabel(version: AppVersion, visible: Boolean, modifier: Modifier = Modifier) {
-    val alpha by animateFloatAsState(if (visible) 1f else 0f, label = "versionLabel")
-    Text(
-        text = stringResource(R.string.feature_speedtest_version, version.name),
-        style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = modifier.graphicsLayer { this.alpha = alpha },
-    )
+private fun AppInfoLabel(version: AppVersion, visible: Boolean, modifier: Modifier = Modifier) {
+    val alpha by animateFloatAsState(if (visible) 1f else 0f, label = "appInfoLabel")
+    Column(horizontalAlignment = Alignment.End, modifier = modifier.graphicsLayer { this.alpha = alpha }) {
+        Text(
+            text = stringResource(R.string.feature_speedtest_author),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = stringResource(R.string.feature_speedtest_version, version.name),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }
 
 /** Fades content out before a run and after an error while keeping its space, so the stage does not move. */

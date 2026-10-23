@@ -11,7 +11,7 @@ import timber.log.Timber
  *
  * On Android, unlike the JVM, `isReachable` sends a real ICMP echo request over an unprivileged
  * ping socket (`SOCK_DGRAM` + `IPPROTO_ICMP`), with no root and no permission beyond `INTERNET`.
- * This has been so since Android 8.0 (API 26, AOSP libcore `Inet6AddressImpl`, b/36933260).
+ * This has been so since Android 8.0 (API 26, AOSP libcore `Inet6AddressImpl`, b/31926888).
  * With a timeout of at most one second it sends exactly one request.
  *
  * Only when ICMP gets no answer does it fall back to a TCP connection to port 7, which would
