@@ -5,10 +5,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Public
@@ -22,6 +24,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import com.martindoudera.speedreader.core.designsystem.component.ProgressSegment
 import com.martindoudera.speedreader.core.designsystem.component.SrIndeterminateProgressBar
 import com.martindoudera.speedreader.core.designsystem.component.SrSegmentedProgressBar
@@ -97,19 +101,30 @@ internal fun MeasuringStage(phase: SpeedTestPhase, modifier: Modifier = Modifier
             }
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = spacing.xs + spacing.xxs).graphicsLayer { alpha = 1f - findingAlpha },
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(spacing.xs),
             ) {
-                TimelineLabel(stringResource(R.string.feature_speedtest_download))
-                TimelineLabel(stringResource(R.string.feature_speedtest_remaining, reading.remaining.wholeSecondsLeft()))
-                TimelineLabel(stringResource(R.string.feature_speedtest_upload))
+                TimelineLabel(stringResource(R.string.feature_speedtest_download), TextAlign.Start)
+                TimelineLabel(stringResource(R.string.feature_speedtest_remaining, reading.remaining.wholeSecondsLeft()), TextAlign.Center)
+                TimelineLabel(stringResource(R.string.feature_speedtest_upload), TextAlign.End)
             }
         }
     }
 }
 
+/** One of three equal slots under the bar; shrinks rather than running into its neighbour at large font scales. */
 @Composable
-private fun TimelineLabel(text: String) {
-    Text(text, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+private fun RowScope.TimelineLabel(text: String, align: TextAlign) {
+    val style = MaterialTheme.typography.labelMedium
+    Text(
+        text = text,
+        style = style,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = align,
+        softWrap = false,
+        maxLines = 1,
+        autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = style.fontSize),
+        modifier = Modifier.weight(1f),
+    )
 }
 
 private data class Reading(val uploading: Boolean, val currentSpeed: Throughput, val progress: Float, val remaining: Duration)

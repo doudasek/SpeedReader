@@ -6,12 +6,11 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Download
@@ -28,7 +27,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.unit.sp
 import com.martindoudera.speedreader.core.designsystem.theme.SpeedReaderTheme
 
 /** Where a [SrMetricCard]'s value stands: not measured yet, being measured, or final. */
@@ -68,24 +74,14 @@ fun SrMetricCard(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.xs + spacing.xxs)) {
             Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(SpeedReaderTheme.dimens.iconSmall))
-            Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            FittedText(label, MaterialTheme.typography.labelMedium, MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Row(Modifier.padding(top = spacing.xs)) {
-            Text(
-                text = value,
-                style = if (emphasized) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.alignByBaseline(),
-                maxLines = 1,
-            )
-            Spacer(Modifier.width(spacing.xs))
-            Text(
-                text = unit,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.alignByBaseline(),
-                maxLines = 1,
-            )
-        }
+        ValueWithUnit(
+            value = value,
+            unit = unit,
+            valueStyle = if (emphasized) MaterialTheme.typography.headlineMedium else MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.padding(top = spacing.xs),
+        )
         Row(
             modifier = Modifier.heightIn(min = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -97,11 +93,56 @@ fun SrMetricCard(
                 MetricStatus.Idle -> Unit
             }
             if (caption != null) {
-                Text(caption, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                FittedText(caption, MaterialTheme.typography.labelSmall, MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
 }
+
+/**
+ * The value and its smaller unit as one line of text, so that when a large font scale makes them
+ * too wide for the card they shrink together instead of the unit being cut off.
+ */
+@Composable
+private fun ValueWithUnit(value: String, unit: String, valueStyle: TextStyle, modifier: Modifier = Modifier) {
+    val unitStyle = MaterialTheme.typography.labelSmall
+    val unitSpan = SpanStyle(
+        fontSize = (unitStyle.fontSize.value / valueStyle.fontSize.value).em,
+        fontWeight = unitStyle.fontWeight,
+        letterSpacing = unitStyle.letterSpacing,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    val text = buildAnnotatedString {
+        append(value)
+        withStyle(unitSpan) {
+            append(UNIT_SEPARATOR)
+            append(unit)
+        }
+    }
+    FittedText(text, valueStyle, modifier = modifier)
+}
+
+/** One line of text in [style] that shrinks to fit the width rather than wrapping or being cut off. */
+@Composable
+private fun FittedText(text: AnnotatedString, style: TextStyle, color: Color = Color.Unspecified, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        style = style,
+        color = color,
+        modifier = modifier,
+        softWrap = false,
+        maxLines = 1,
+        autoSize = TextAutoSize.StepBased(minFontSize = MIN_FITTED_FONT_SIZE, maxFontSize = style.fontSize),
+    )
+}
+
+@Composable
+private fun FittedText(text: String, style: TextStyle, color: Color = Color.Unspecified, modifier: Modifier = Modifier) =
+    FittedText(AnnotatedString(text), style, color, modifier)
+
+/** A three-per-em space: at the unit's size, about as wide as the gap the separate texts used to have. */
+private const val UNIT_SEPARATOR = "\u2004"
+private val MIN_FITTED_FONT_SIZE = 8.sp
 
 @ThemePreviews
 @Composable
